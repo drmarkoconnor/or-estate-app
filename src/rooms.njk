@@ -50,7 +50,73 @@ title: Rooms
           </div>
         </div>
         ${r.notes ? `<p class=\"text-sm mt-2\">${r.notes}</p>` : ''}
+        <div class=\"mt-3 grid gap-2\">
+          <div class=\"flex items-center gap-2\">
+            <input type=\"file\" data-room=\"${r.id}\" class=\"block w-full text-sm\" />
+            <select data-kind=\"${r.id}\" class=\"rounded-md border-gray-300 text-sm\"><option value=\"photo\">Photo</option><option value=\"doc\">Document</option></select>
+            <button class=\"btn\" data-upload=\"${r.id}\">Upload</button>
+          </div>
+          <div class=\"text-sm\">
+            <input class=\"rounded-md border-gray-300 text-sm w-2/3\" placeholder=\"Quick task...\" data-task-title=\"${r.id}\" />
+            <button class=\"btn\" data-add-task=\"${r.id}\">Add Task</button>
+          </div>
+          <div class=\"mt-2\" id=\"media-${r.id}\"></div>
+          <div class=\"mt-2\" id=\"tasks-${r.id}\"></div>
+        </div>
       </div>`).join('') || '<p class="muted">No rooms yet.</p>';
+
+    // attach handlers
+    listEl.querySelectorAll('button[data-upload]').forEach(btn => {
+      btn.addEventListener('click', () => uploadForRoom(btn.getAttribute('data-upload')));
+    });
+    listEl.querySelectorAll('button[data-add-task]').forEach(btn => {
+      btn.addEventListener('click', () => addTaskForRoom(btn.getAttribute('data-add-task')));
+    });
+
+    // load media/tasks for each room
+    rooms.forEach(rm => { loadMedia(rm.id); loadTasks(rm.id); });
+  }
+
+  async function loadMedia(roomId) {
+    const el = document.getElementById(`media-${roomId}`);
+    const r = await fetch(`/.netlify/functions/room-media-list?room_id=${roomId}`);
+    if (!r.ok) { el.textContent = 'Error loading media'; return; }
+    const { photos, documents } = await r.json();
+    const photoList = photos.map(p => `<a class=\"inline-block mr-2 mb-2\" href=\"/.netlify/functions/storage-proxy?bucket=photos&path=${encodeURIComponent(p.storage_path)}\" target=\"_blank\"><span class=\"px-2 py-1 bg-emerald-50 text-emerald-700 rounded\">📷 Photo</span></a>`).join('');
+    const docList = documents.map(d => `<a class=\"inline-block mr-2 mb-2\" href=\"/.netlify/functions/storage-proxy?bucket=docs&path=${encodeURIComponent(d.storage_path)}\" target=\"_blank\"><span class=\"px-2 py-1 bg-emerald-50 text-emerald-700 rounded\">📄 ${d.title||'Document'}</span></a>`).join('');
+    el.innerHTML = `<div class=\"text-sm\">${photoList}${docList || ''}</div>` || '<p class="muted">No media yet.</p>';
+  }
+
+  async function uploadForRoom(roomId) {
+    const fileInput = listEl.querySelector(`input[type=file][data-room="${roomId}"]`);
+    const kindSel = listEl.querySelector(`select[data-kind="${roomId}"]`);
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return alert('Choose a file');
+    const kind = kindSel.value;
+    const init = await fetch(`/.netlify/functions/room-media-upload?room_id=${roomId}&kind=${kind}&filename=${encodeURIComponent(file.name)}`, { method: 'POST' });
+    if (!init.ok) return alert(await init.text());
+    const { signedUrl, token, bucket, storagePath } = await init.json();
+    // PUT file to signedUrl as per Supabase
+    const put = await fetch(signedUrl, { method: 'PUT', headers: { 'x-upsert': 'true', 'authorization': `Bearer ${token}` }, body: file });
+    if (!put.ok) return alert('Upload failed');
+    await fetch('/.netlify/functions/room-media-save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ room_id: roomId, kind, storage_path: storagePath, title: file.name }) });
+    fileInput.value = '';
+    await loadMedia(roomId);
+  }
+
+  async function loadTasks(roomId) {
+    const el = document.getElementById(`tasks-${roomId}`);
+    const r = await fetch(`/.netlify/functions/tasks-list?room_id=${roomId}`);
+    if (!r.ok) { el.textContent = 'Error loading tasks'; return; }
+    const items = await r.json();
+    el.innerHTML = items.map(t => `<div class=\"text-sm flex items-center gap-2\"><span class=\"px-2 py-0.5 rounded bg-gray-100\">${t.priority}</span><span>${t.title}</span></div>`).join('') || '<p class="muted">No tasks.</p>';
+  }
+
+  async function addTaskForRoom(roomId) {
+    const input = listEl.querySelector(`input[data-task-title="${roomId}"]`);
+    const title = input.value.trim(); if (!title) return;
+    const res = await fetch('/.netlify/functions/tasks-upsert', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ title, room_id: roomId }) });
+    if (res.ok) { input.value = ''; await loadTasks(roomId); } else { alert('Error'); }
   }
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
