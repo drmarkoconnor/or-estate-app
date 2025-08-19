@@ -1,0 +1,122 @@
+---
+layout: layouts/base.njk
+title: Shopping
+permalink: /shopping/
+---
+<section class="card">
+  <h2 class="text-xl font-semibold">Create Shopping List</h2>
+  <div class="mt-4 grid gap-6 lg:grid-cols-2">
+    <div>
+      <div class="flex items-center gap-2">
+        <input id="search" placeholder="Search items…" class="mt-1 block w-full rounded-lg border-gray-300 focus:border-brand-500 focus:ring-brand-500" />
+        <button class="btn" id="saveBtn">Save List</button>
+      </div>
+      <p class="muted mt-2 text-sm">Pick from curated categories below. Click + to add to the current list.</p>
+      <div id="catalog" class="mt-4 space-y-3 max-h-[60vh] overflow-auto pr-1"></div>
+    </div>
+    <div>
+      <label class="block text-sm font-medium">Title</label>
+      <input id="title" class="mt-1 block w-full rounded-lg border-gray-300 focus:border-brand-500 focus:ring-brand-500" placeholder="Shopping List" />
+      <div class="mt-4 card">
+        <h3 class="text-lg font-semibold">Markdown Preview</h3>
+        <pre id="md" class="mt-3 whitespace-pre-wrap text-sm"></pre>
+      </div>
+      <div class="mt-2 flex items-center gap-2">
+        <button class="btn" id="copyBtn">Copy Markdown</button>
+        <a class="btn-secondary" id="viewLatest" href="#">View Saved List</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="card mt-6">
+  <h3 class="text-lg font-semibold">Recent Lists</h3>
+  <div id="lists" class="mt-3"></div>
+</section>
+
+<script>
+(function(){
+  const data = {{ shopping | dump | safe }};
+  const catalogEl = document.getElementById('catalog');
+  const mdEl = document.getElementById('md');
+  const titleEl = document.getElementById('title');
+  const saveBtn = document.getElementById('saveBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const viewLatest = document.getElementById('viewLatest');
+  const listsEl = document.getElementById('lists');
+  const searchEl = document.getElementById('search');
+  let chosen = [];
+
+  function flattenCatalog(filterText){
+    const out = [];
+    const ft = (filterText||'').toLowerCase();
+    for (const cat of Object.keys(data)){
+      const sub = data[cat];
+      for (const subcat of Object.keys(sub)){
+        const items = sub[subcat];
+        for (const it of items){
+          if (ft && !it.name.toLowerCase().includes(ft) && !subcat.toLowerCase().includes(ft) && !cat.toLowerCase().includes(ft)) continue;
+          out.push({ category: cat, subcategory: subcat, ...it });
+        }
+      }
+    }
+    return out;
+  }
+
+  function renderCatalog(){
+    const rows = flattenCatalog(searchEl.value).map(it => {
+      const added = chosen.find(c => c.id === it.id);
+      return `<div class=\"rounded-lg ring-1 ring-gray-200 bg-white/90 hover:shadow transition px-3 py-2 flex items-center justify-between\">
+        <div>
+          <div class=\"font-medium\">${it.name}</div>
+          <div class=\"text-xs muted\">${it.category} • ${it.subcategory} • ${it.source}</div>
+        </div>
+        <button class=\"${added?'btn-secondary':'btn'} text-sm px-3 py-1\" data-add=\"${it.id}\">${added? 'Added' : '+ Add'}</button>
+      </div>`;
+    });
+    catalogEl.innerHTML = rows.join('') || '<p class="muted">No matches.</p>';
+    catalogEl.querySelectorAll('button[data-add]').forEach(b => b.addEventListener('click', () => {
+      const id = b.getAttribute('data-add');
+      const it = flattenCatalog().find(x => x.id === id);
+      if (!it) return;
+      if (!chosen.find(c => c.id === id)) chosen.push({ id: it.id, name: it.name, source: it.source });
+      renderCatalog();
+      renderMarkdown();
+    }));
+  }
+
+  function renderMarkdown(){
+    const lines = chosen.map(c => `- [ ] ${c.name}${c.source ? ' ('+c.source+')' : ''}`);
+    mdEl.textContent = lines.join('\n');
+  }
+
+  async function loadLists(){
+    const r = await fetch('/.netlify/functions/shopping-lists');
+    if (!r.ok) return;
+    const lists = await r.json();
+    listsEl.innerHTML = lists.map(l => `<div class=\"rounded-lg ring-1 ring-gray-200 bg-white/90 px-3 py-2 mb-2\"><a class=\"font-medium\" href=\"/shopping/view/?id=${l.id}\">${l.title}</a><span class=\"muted text-xs ml-2\">${new Date(l.created_at).toLocaleString()}</span></div>`).join('') || '<p class="muted">No lists yet.</p>';
+  }
+
+  saveBtn.addEventListener('click', async () => {
+    if (chosen.length === 0) return alert('Choose some items');
+    const res = await fetch('/.netlify/functions/shopping-list-create', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ title: titleEl.value || 'Shopping List', items: chosen }) });
+    if (!res.ok) return alert('Save failed');
+    const { id } = await res.json();
+    viewLatest.href = `/shopping/view/?id=${id}`;
+    viewLatest.textContent = 'Open Saved List';
+    await loadLists();
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(mdEl.textContent);
+    copyBtn.textContent = 'Copied';
+    setTimeout(() => copyBtn.textContent = 'Copy Markdown', 1200);
+  });
+
+  searchEl.addEventListener('input', renderCatalog);
+
+  renderCatalog();
+  renderMarkdown();
+  loadLists();
+})();
+</script>

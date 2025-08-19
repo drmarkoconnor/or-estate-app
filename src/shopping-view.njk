@@ -1,0 +1,29 @@
+---
+layout: layouts/base.njk
+title: Shopping List
+permalink: /shopping/view/
+---
+<section class="card">
+  <h2 class="text-xl font-semibold">Shopping List</h2>
+  <div id="list" class="mt-3"></div>
+</section>
+<script>
+(async function(){
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  if (!id) { document.getElementById('list').textContent = 'Missing id'; return; }
+  const r = await fetch('/.netlify/functions/shopping-list-get?id=' + encodeURIComponent(id));
+  if (!r.ok) { document.getElementById('list').textContent = 'Not found'; return; }
+  const data = await r.json();
+  document.title = data.title + ' – Shopping';
+  const listEl = document.getElementById('list');
+  listEl.innerHTML = data.items.map(it => `<label class=\"flex items-center gap-3 py-2\">\
+    <input type=\"checkbox\" ${it.checked?'checked':''} data-id=\"${it.id}\" class=\"h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600\">\
+    <span>${it.name}${it.source? ' <span class=\\"muted text-xs\\">('+it.source+')</span>':''}</span>\
+  </label>`).join('');
+  listEl.querySelectorAll('input[type=checkbox][data-id]').forEach(cb => cb.addEventListener('change', async () => {
+    const res = await fetch('/.netlify/functions/shopping-list-toggle', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ item_id: cb.getAttribute('data-id'), checked: cb.checked }) });
+    if (!res.ok) alert('Update failed');
+  }));
+})();
+</script>

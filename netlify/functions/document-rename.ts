@@ -12,7 +12,11 @@ export const handler: Handler = async (event) => {
   const parsed = schema.safeParse(JSON.parse(event.body || "{}"));
   if (!parsed.success) return { statusCode: 400, body: JSON.stringify(parsed.error.flatten()) };
   const { id, title } = parsed.data;
-  const { error } = await supabase.from("documents").update({ title }).eq("id", id).eq("household_id", session.household_id);
+  const { error } = await supabase
+    .from("documents")
+    .update({ title })
+    .eq("id", id)
+    .eq("household_id", session.household_id);
   if (error) return { statusCode: 500, body: error.message };
   return { statusCode: 204 };
 };

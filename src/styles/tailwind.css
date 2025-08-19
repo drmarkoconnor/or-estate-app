@@ -16,7 +16,10 @@
     @apply inline-flex items-center justify-center rounded-lg border border-brand-200 text-brand-800 px-4 py-2 text-base font-medium hover:bg-brand-50;
   }
   .card {
-    @apply rounded-xl border border-gray-200 bg-white/80 backdrop-blur shadow-sm p-4 md:p-6;
+    @apply rounded-xl ring-1 ring-gray-200/80 bg-white/90 backdrop-blur shadow-sm p-4 md:p-6 transition;
+  }
+  .card:hover {
+    @apply shadow-md ring-gray-300;
   }
   .muted {
     @apply text-gray-500;

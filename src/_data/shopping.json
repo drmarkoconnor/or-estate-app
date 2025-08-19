@@ -1,0 +1,843 @@
+{
+  "Fresh Vegetables": {
+    "Potatoes": [
+      {
+        "id": "fresh_vegetables_potatoes_maris_piper",
+        "name": "Maris Piper Potatoes",
+        "source": "Tesco"
+      }
+    ],
+    "Carrots": [
+      {
+        "id": "fresh_vegetables_carrots",
+        "name": "Carrots",
+        "source": "Tesco"
+      }
+    ],
+    "Onions": [
+      {
+        "id": "fresh_vegetables_onions",
+        "name": "Onions",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Fresh Fruit": {
+    "Bananas": [
+      {
+        "id": "fresh_fruit_bananas",
+        "name": "Bananas",
+        "source": "Tesco"
+      }
+    ],
+    "Apples": [
+      {
+        "id": "fresh_fruit_apples_braeburn",
+        "name": "Braeburn Apples",
+        "source": "Tesco"
+      },
+      {
+        "id": "fresh_fruit_apples_british",
+        "name": "British Apples",
+        "source": "Tesco"
+      }
+    ],
+    "Berries": [
+      {
+        "id": "fresh_fruit_berries_blueberries",
+        "name": "Blueberries",
+        "source": "Tesco"
+      },
+      {
+        "id": "fresh_fruit_berries_raspberries",
+        "name": "Raspberries",
+        "source": "Tesco"
+      },
+      {
+        "id": "fresh_fruit_berries_strawberries",
+        "name": "Strawberries",
+        "source": "Tesco"
+      }
+    ],
+    "Citrus": [
+      {
+        "id": "fresh_fruit_citrus_oranges",
+        "name": "Oranges",
+        "source": "Tesco"
+      },
+      {
+        "id": "fresh_fruit_citrus_lemons",
+        "name": "Lemons",
+        "source": "Tesco"
+      }
+    ],
+    "Grapes": [
+      {
+        "id": "fresh_fruit_grapes_red",
+        "name": "Red Grapes",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Dried Pasta, Rice, Noodles & Cous Cous": {
+    "Pasta": [
+      {
+        "id": "pasta_short_spaghetti",
+        "name": "Tesco Short Spaghetti Pasta 500G",
+        "source": "Tesco"
+      },
+      {
+        "id": "pasta_rigatoni",
+        "name": "Tesco Rigatoni Pasta 500G",
+        "source": "Tesco"
+      }
+    ],
+    "Grains": [
+      {
+        "id": "grains_quinoa_red_white",
+        "name": "Merchant Gourmet Red & White Quinoa 250G",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Table Sauces, Olives, Pickles & Chutney": {
+    "Ketchup": [
+      {
+        "id": "sauces_heinz_ketchup_zero",
+        "name": "Heinz Tomato Ketchup Zero Added Sugar & Salt 425G",
+        "source": "Tesco"
+      }
+    ],
+    "Condiments": [
+      {
+        "id": "sauces_worcestershire_lea_perrins",
+        "name": "Lea & Perrins Worcestershire Sauce 290Ml",
+        "source": "Tesco"
+      },
+      {
+        "id": "sauces_pizza_express_dressing",
+        "name": "Pizza Express House Salad Dressing 235Ml",
+        "source": "Tesco"
+      }
+    ],
+    "Chutney & Pickles": [
+      {
+        "id": "sauces_geetas_mango_chutney",
+        "name": "Geeta's Mango Chutney 320G",
+        "source": "Tesco"
+      },
+      {
+        "id": "sauces_sharwoods_mango_chutney",
+        "name": "Sharwoods Green Label Mango Chutney 530G",
+        "source": "Tesco"
+      },
+      {
+        "id": "sauces_garners_pickled_onions",
+        "name": "Garners Original Pickled Onions 454G",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Jams, Sweet & Savoury Spreads": {
+    "Spreads": [
+      {
+        "id": "spreads_marmite",
+        "name": "Marmite Yeast Extract Spread 250G",
+        "source": "Tesco"
+      },
+      {
+        "id": "spreads_marmite_squeezy",
+        "name": "Marmite Squeezy Yeast Extract 200G",
+        "source": "Tesco"
+      }
+    ],
+    "Jams & Marmalades": [
+      {
+        "id": "spreads_marmalade_seville",
+        "name": "Mackays Natural Fruit Seville Orange Marmalade 340G",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Home Baking & Sugar": {
+    "Juice": [
+      {
+        "id": "baking_tesco_lemon_juice",
+        "name": "Tesco Lemon Juice 250Ml",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Soft Drinks": {
+    "Fizzy": [
+      {
+        "id": "drinks_diet_coke_24pack",
+        "name": "Diet Coke 24x330ml",
+        "source": "Tesco"
+      }
+    ],
+    "Water": [
+      {
+        "id": "drinks_san_pellegrino_6x1l",
+        "name": "San Pellegrino Sparkling Natural Mineral Water Multipack 6x1L",
+        "source": "Tesco"
+      }
+    ],
+    "Cordial": [
+      {
+        "id": "drinks_bottlegreen_elderflower_cordial",
+        "name": "Bottlegreen Elderflower Cordial 50Cl",
+        "source": "Tesco"
+      }
+    ],
+    "Mixers": [
+      {
+        "id": "drinks_fever_tree_light_ginger_ale",
+        "name": "Fever-Tree Light Ginger Ale Cans 8X150ml",
+        "source": "Tesco"
+      },
+      {
+        "id": "drinks_schweppes_ginger_beer",
+        "name": "Schweppes Ginger Beer 12 x 150ml",
+        "source": "Tesco"
+      },
+      {
+        "id": "drinks_fever_tree_light_elderflower_tonic",
+        "name": "Fever Tree Light Elderflower Tonic Cans 8X150ml",
+        "source": "Tesco"
+      },
+      {
+        "id": "drinks_fever_tree_light_mediterranean_tonic",
+        "name": "Fever Tree Light Mediterranean Tonic Water Cans 8X150ml",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Coffee": {
+    "Instant Coffee": [
+      {
+        "id": "coffee_tesco_finest_colombian",
+        "name": "Tesco Finest Colombian Instant Coffee 100G",
+        "source": "Tesco"
+      },
+      {
+        "id": "coffee_douwe_egberts_pure_gold",
+        "name": "Douwe Egberts Pure Gold Instant Coffee 190G",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Beer & Cider": {
+    "Beer": [
+      {
+        "id": "beer_birra_moretti_12pack",
+        "name": "Birra Moretti Premium Lager Beer Bottle 12x330ml",
+        "source": "Tesco"
+      }
+    ],
+    "Cider": [
+      {
+        "id": "cider_henneys_frome_valley",
+        "name": "Henney's Frome Valley Cider 500Ml Bottle",
+        "source": "Tesco"
+      }
+    ],
+    "Alcohol Free Beer": [
+      {
+        "id": "beer_guinness_00",
+        "name": "Guinness 0.0% Alcohol Free Draught Stout 10X440ml",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Wine": {
+    "White Wine": [
+      {
+        "id": "wine_villa_maria_sauvignon_blanc",
+        "name": "Villa Maria Private Bin Sauvignon Blanc 75Cl",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Spirits": {
+    "Whisky": [
+      {
+        "id": "spirits_haig_clubman_whisky",
+        "name": "Haig Club Clubman Scotch Whisky Bottle 40% Vol 70cl",
+        "source": "Tesco"
+      }
+    ],
+    "Liqueur": [
+      {
+        "id": "spirits_kahlua_coffee_liqueur",
+        "name": "Kahl\u00faa The Original Coffee Liqueur 70cl",
+        "source": "Tesco"
+      }
+    ],
+    "Premixed": [
+      {
+        "id": "spirits_all_shook_up_mojito",
+        "name": "All Shook Up Mojito 3.4% ABV 250ml",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Alcohol Free & Low Alcohol": {
+    "Beer & Ale": [
+      {
+        "id": "alcoholfree_birra_moretti_zero",
+        "name": "Birra Moretti Zero Alcohol Free Beer 4 x 330ml",
+        "source": "Tesco"
+      },
+      {
+        "id": "alcoholfree_sharps_doom_bar_zero",
+        "name": "Sharp's Doom Bar Zero Alcohol Free Amber Ale Beer Bottle 500ml",
+        "source": "Tesco"
+      },
+      {
+        "id": "alcoholfree_leffe_blonde_zero",
+        "name": "Leffe Blonde 0% Alcohol Free Beer 6X250ml",
+        "source": "Tesco"
+      }
+    ],
+    "Wine": [
+      {
+        "id": "alcoholfree_tesco_sauvignon_blanc_rose",
+        "name": "Tesco Alcohol Free Sauvignon Blanc Rose 75Cl",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Toiletries": {
+    "Shampoo": [
+      {
+        "id": "toiletries_head_shoulders_apple",
+        "name": "Head & Shoulders Anti-Dandruff Shampoo - Apple Fresh 400ml",
+        "source": "Tesco"
+      },
+      {
+        "id": "toiletries_head_shoulders_citrus_2in1",
+        "name": "Head & Shoulders 2 in 1 Citrus Fresh Shampoo & Conditioner 330ml",
+        "source": "Tesco"
+      }
+    ],
+    "Shower Gel": [
+      {
+        "id": "toiletries_original_source_mint",
+        "name": "Original Source Mint & Tea Tree Shower Gel 500Ml",
+        "source": "Tesco"
+      }
+    ],
+    "Deodorant": [
+      {
+        "id": "toiletries_sure_72h_invisible",
+        "name": "Sure 72h Nonstop Protection Invisible Pure Antiperspirant Deodorant 50ml",
+        "source": "Tesco"
+      }
+    ],
+    "Oral Care": [
+      {
+        "id": "toiletries_pro_formula_brushes_size5",
+        "name": "Pro Formula 6 Interdental Brushes Size 5",
+        "source": "Tesco"
+      },
+      {
+        "id": "toiletries_pro_formula_brushes_size4",
+        "name": "Pro Formula Interdental Brushes Size 4 6 Pack",
+        "source": "Tesco"
+      },
+      {
+        "id": "toiletries_corsodyl_mouthwash",
+        "name": "Corsodyl Mint Mouthwash 300Ml",
+        "source": "Tesco"
+      }
+    ],
+    "Men's Razors": [
+      {
+        "id": "toiletries_gillette_mach3_razor",
+        "name": "Gillette Mach3 Men's Razor with 1 Razor Blade",
+        "source": "Tesco"
+      },
+      {
+        "id": "toiletries_gillette_mach3_blades",
+        "name": "Gillette Mach 3 Men's Razor Blades Refills 4 Pack",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Household": {
+    "Toilet Roll": [
+      {
+        "id": "household_andrex_complete_clean",
+        "name": "Andrex Complete Clean Toilet Tissue Standard Rolls 9 Rolls",
+        "source": "Tesco"
+      }
+    ],
+    "Cleaning": [
+      {
+        "id": "household_tesco_bleach_citrus",
+        "name": "Tesco Thick Bleach 24Hr Citrus 750Ml",
+        "source": "Tesco"
+      },
+      {
+        "id": "household_tesco_non_scratch_sponges",
+        "name": "Tesco Non-Scratch Sponge Pan Cleaners 6 Pack",
+        "source": "Tesco"
+      },
+      {
+        "id": "household_fairy_washing_up_liquid",
+        "name": "Fairy Original Washing Up Liquid 320Ml",
+        "source": "Tesco"
+      }
+    ],
+    "Air Fresheners": [
+      {
+        "id": "household_febreze_air_freshener_cotton",
+        "name": "Febreze Air Mist Air Freshener Spray - Cotton Fresh 185ml",
+        "source": "Tesco"
+      }
+    ],
+    "Essentials": [
+      {
+        "id": "household_zip_firelighters",
+        "name": "Zip Odourless Firelighters 14 Pack",
+        "source": "Tesco"
+      },
+      {
+        "id": "household_tesco_refuse_sacks",
+        "name": "Tesco Extra Strong Drawstring Refuse Sacks 50 Litre 20 Pack",
+        "source": "Tesco"
+      }
+    ],
+    "Food Storage": [
+      {
+        "id": "household_tesco_cling_film",
+        "name": "Tesco PVC-Free Cling Film 40m x 350mm",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Cooking & Dining": {
+    "Utensils & Cookware": [
+      {
+        "id": "cooking_tesco_silicone_spatula_set",
+        "name": "Tesco Silicone Spatula 3pc Set",
+        "source": "Tesco"
+      },
+      {
+        "id": "cooking_jena_wooden_cutlery",
+        "name": "Jena Wooden Mixed Cutlery 36Pk",
+        "source": "Tesco"
+      },
+      {
+        "id": "cooking_tesco_paper_plates",
+        "name": "Tesco Paper Plates White 23Cm 50 Pack",
+        "source": "Tesco"
+      },
+      {
+        "id": "cooking_tesco_medium_oven_tray",
+        "name": "Tesco Medium Oven Tray 35Cm X 25Cm",
+        "source": "Tesco"
+      },
+      {
+        "id": "cooking_tesco_frying_pan",
+        "name": "Tesco Aluminium Frying Pan 24Cm",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Batteries": {
+    "Batteries": [
+      {
+        "id": "batteries_duracell_plus_aaa_8pk",
+        "name": "Duracell Plus AAA (8 Pack)",
+        "source": "Tesco"
+      }
+    ]
+  },
+  "Condiments & Specialty Sauces": {
+    "Condiments": [
+      {
+        "id": "condiments_chilli_oil_extra_bits",
+        "name": "Chilli Oil with Extra Bits",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_sanbaizu_vinegar",
+        "name": "Sanbaizu Vinegar",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_spaghetti_dust",
+        "name": "Spaghetti Dust",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_raw_kimchi_hot_sauce",
+        "name": "Raw Kimchi Hot Sauce",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_yuzu_kosho",
+        "name": "Yuzu-Kosho",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_confit_garlic",
+        "name": "Confit Garlic",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_kewpie_mayonnaise",
+        "name": "Kewpie Mayonnaise",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_zaatar",
+        "name": "Za'atar",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_tonkatsu_sauce",
+        "name": "Tonkatsu Sauce",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_hot_honey",
+        "name": "Hot Honey",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_pilpelchuma",
+        "name": "Pilpelchuma (Spicy Sauce)",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_toum",
+        "name": "Toum (Garlic Sauce)",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_yuzu",
+        "name": "Yuzu",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_juniper",
+        "name": "Juniper",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_sour_cherry",
+        "name": "Sour Cherry Sauce",
+        "source": "Waitrose"
+      },
+      {
+        "id": "condiments_crispy_chilli_oil",
+        "name": "Crispy Chilli Oil",
+        "source": "Waitrose"
+      }
+    ]
+  },
+  "Premium Meat & Dairy": {
+    "Dairy": [
+      {
+        "id": "premium_dairy_free_range_cream",
+        "name": "Free-range Cream",
+        "source": "Waitrose"
+      },
+      {
+        "id": "premium_dairy_flavoured_butter",
+        "name": "Flavoured Butter",
+        "source": "Waitrose"
+      },
+      {
+        "id": "premium_dairy_chocolate_butter",
+        "name": "Chocolate Butter",
+        "source": "Waitrose"
+      }
+    ],
+    "Meat": [
+      {
+        "id": "premium_meat_steak",
+        "name": "Premium Steak",
+        "source": "Waitrose"
+      },
+      {
+        "id": "premium_meat_free_range_chicken",
+        "name": "Free-Range Chicken",
+        "source": "Waitrose"
+      }
+    ],
+    "Bread": [
+      {
+        "id": "premium_bread_artisan_loaf",
+        "name": "Artisan Sourdough Loaf",
+        "source": "Waitrose"
+      }
+    ]
+  },
+  "Artisan Bread & Sweet Treats": {
+    "Bakery": [
+      {
+        "id": "artisan_crookies",
+        "name": "Crookies",
+        "source": "Waitrose"
+      },
+      {
+        "id": "artisan_hash_browns",
+        "name": "Hash Browns",
+        "source": "Waitrose"
+      },
+      {
+        "id": "artisan_tim_tams",
+        "name": "Tim Tams",
+        "source": "Waitrose"
+      },
+      {
+        "id": "artisan_chocolate_muffins",
+        "name": "Chocolate Muffins",
+        "source": "Waitrose"
+      },
+      {
+        "id": "artisan_rice_pudding",
+        "name": "Rice Pudding",
+        "source": "Waitrose"
+      }
+    ]
+  },
+  "Fermented & Whole Foods": {
+    "Fermented": [
+      {
+        "id": "fermented_kefir",
+        "name": "Kefir",
+        "source": "Waitrose"
+      },
+      {
+        "id": "fermented_kimchi",
+        "name": "Kimchi",
+        "source": "Waitrose"
+      },
+      {
+        "id": "fermented_pickle_juice",
+        "name": "Pickle Juice",
+        "source": "Waitrose"
+      }
+    ],
+    "Whole Foods": [
+      {
+        "id": "wholefoods_brown_rice",
+        "name": "Brown Rice",
+        "source": "Waitrose"
+      },
+      {
+        "id": "wholefoods_spelt",
+        "name": "Spelt",
+        "source": "Waitrose"
+      }
+    ]
+  },
+  "Jarred Beans & Pulses": {
+    "Beans & Pulses": [
+      {
+        "id": "jarred_beans_premium",
+        "name": "Premium Jarred Beans",
+        "source": "Waitrose"
+      },
+      {
+        "id": "jarred_beans_canned_lentils",
+        "name": "Canned Lentils",
+        "source": "Waitrose"
+      },
+      {
+        "id": "jarred_beans_canned_chickpeas",
+        "name": "Canned Chickpeas",
+        "source": "Waitrose"
+      }
+    ]
+  },
+  "Instant Noodles & Ready Meals": {
+    "Instant Noodles": [
+      {
+        "id": "instant_noodles",
+        "name": "Instant Noodles",
+        "source": "Waitrose"
+      }
+    ],
+    "Ready Meals": [
+      {
+        "id": "ready_meals_prepared_meat",
+        "name": "Pre-prepared Meat with Marinade",
+        "source": "Waitrose"
+      }
+    ]
+  },
+  "Plant-based Proteins & Meals": {
+    "Tofu & Meat Alternatives": [
+      {
+        "id": "plant_based_tofu_firm",
+        "name": "Organic Firm Tofu",
+        "source": "Waitrose"
+      },
+      {
+        "id": "plant_based_tofu_marinated",
+        "name": "Marinated Organic Tofu",
+        "source": "Waitrose"
+      },
+      {
+        "id": "plant_based_veg_mince",
+        "name": "Plant & Veg Mince",
+        "source": "Waitrose"
+      },
+      {
+        "id": "plant_based_veg_balls",
+        "name": "Plant & Vegballs",
+        "source": "Waitrose"
+      },
+      {
+        "id": "plant_based_no_chicken_southern_fried",
+        "name": "Southern Fried No Chicken",
+        "source": "Waitrose"
+      },
+      {
+        "id": "plant_based_no_chicken_kiev",
+        "name": "No Chicken Kiev",
+        "source": "Waitrose"
+      },
+      {
+        "id": "plant_based_no_chorizo_sausages",
+        "name": "No Chorizo Sausages",
+        "source": "Waitrose"
+      },
+      {
+        "id": "plant_based_loaded_veg_kebabs",
+        "name": "Loaded Vegetable Kebabs",
+        "source": "Waitrose"
+      },
+      {
+        "id": "plant_based_garlic_filled_doughballs",
+        "name": "Garlic-filled Doughballs",
+        "source": "Waitrose"
+      },
+      {
+        "id": "plant_based_nduja_fiorelli",
+        "name": "Nduja Style Fiorelli",
+        "source": "Waitrose"
+      },
+      {
+        "id": "plant_based_mediterranean_mini_rolls",
+        "name": "Mediterranean Style Mini Rolls",
+        "source": "Waitrose"
+      },
+      {
+        "id": "plant_based_curried_mini_rolls",
+        "name": "Curried Vegetable Mini Rolls",
+        "source": "Waitrose"
+      }
+    ]
+  },
+  "Pistachio & Specialty Nuts": {
+    "Nuts & Spreads": [
+      {
+        "id": "nuts_pistachio",
+        "name": "Pistachio Nuts",
+        "source": "Waitrose"
+      },
+      {
+        "id": "nuts_peanut_butter",
+        "name": "Peanut Butter",
+        "source": "Waitrose"
+      },
+      {
+        "id": "nuts_pistachio_butter",
+        "name": "Pistachio Butter",
+        "source": "Waitrose"
+      }
+    ]
+  },
+  "Herbs & Spices": {
+    "Herbs": [
+      {
+        "id": "herbs_tarragon",
+        "name": "Tarragon",
+        "source": "M&S"
+      },
+      {
+        "id": "herbs_oregano",
+        "name": "Oregano",
+        "source": "M&S"
+      },
+      {
+        "id": "herbs_coriander",
+        "name": "Large Coriander",
+        "source": "M&S"
+      }
+    ],
+    "Spices": [
+      {
+        "id": "spices_zaatar",
+        "name": "Za'atar Spice Mix",
+        "source": "M&S"
+      }
+    ]
+  },
+  "Seasonings & Salts": {
+    "Salts": [
+      {
+        "id": "seasonings_table_salt",
+        "name": "Table Salt",
+        "source": "M&S"
+      },
+      {
+        "id": "seasonings_himalayan_pink_salt",
+        "name": "Himalayan Pink Rock Salt",
+        "source": "M&S"
+      },
+      {
+        "id": "seasonings_celery_salt",
+        "name": "Celery Salt",
+        "source": "M&S"
+      }
+    ]
+  },
+  "Prepared Meat & Gravies": {
+    "Prepared Meat": [
+      {
+        "id": "prepared_meat_spatchcock_chicken",
+        "name": "Sweet & Smokey Spatchcock Chicken",
+        "source": "M&S"
+      }
+    ],
+    "Popcorn": [
+      {
+        "id": "snacks_popping_corn",
+        "name": "Popping Corn",
+        "source": "M&S"
+      }
+    ],
+    "Gravies": [
+      {
+        "id": "gravies_beef",
+        "name": "Beef Gravy",
+        "source": "M&S"
+      },
+      {
+        "id": "gravies_chicken",
+        "name": "Chicken Gravy",
+        "source": "M&S"
+      },
+      {
+        "id": "gravies_lamb",
+        "name": "Lamb Gravy",
+        "source": "M&S"
+      }
+    ],
+    "Curry Pastes": [
+      {
+        "id": "paste_katsu_curry",
+        "name": "Katsu Curry Paste",
+        "source": "M&S"
+      }
+    ]
+  }
+}
