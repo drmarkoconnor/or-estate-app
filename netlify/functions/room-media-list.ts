@@ -13,7 +13,7 @@ export const handler: Handler = async (event) => {
   const [photosRes, docsRes] = await Promise.all([
     supabase
       .from("room_photos")
-      .select("id, storage_path, caption, created_at")
+      .select("id, storage_path, caption, is_hero, created_at")
       .eq("household_id", session.household_id)
       .eq("room_id", room_id)
       .order("created_at", { ascending: false }),

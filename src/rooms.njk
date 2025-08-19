@@ -113,7 +113,8 @@ title: Rooms
     if (!r.ok) return;
     const { photos } = await r.json();
     if (photos && photos.length) {
-      const src = `/.netlify/functions/storage-proxy?bucket=photos&path=${encodeURIComponent(photos[0].storage_path)}`;
+      const hp = photos.find(p => p.is_hero) || photos[0];
+      const src = `/.netlify/functions/storage-proxy?bucket=photos&path=${encodeURIComponent(hp.storage_path)}`;
       el.style.backgroundImage = `url(${src})`;
       el.style.backgroundSize = 'cover';
       el.style.backgroundPosition = 'center';

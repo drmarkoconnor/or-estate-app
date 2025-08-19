@@ -9,6 +9,7 @@ const schema = z.object({
   items: z
     .array(z.object({ id: z.string(), name: z.string(), source: z.string().optional() }))
     .min(1),
+  setLastBoughtOnSave: z.boolean().optional(),
 });
 
 export const handler: Handler = async (event) => {
@@ -17,7 +18,7 @@ export const handler: Handler = async (event) => {
   const supabase = getServiceClient();
   const parsed = schema.safeParse(JSON.parse(event.body || "{}"));
   if (!parsed.success) return { statusCode: 400, body: JSON.stringify(parsed.error.flatten()) };
-  const { title, description, items } = parsed.data;
+  const { title, description, items, setLastBoughtOnSave } = parsed.data;
 
     const { data: list, error: listErr } = await supabase
       .from("shopping_lists")
@@ -34,6 +35,13 @@ export const handler: Handler = async (event) => {
   }));
   const { error: itemsErr } = await supabase.from("shopping_list_items").insert(payload);
   if (itemsErr) return { statusCode: 500, body: itemsErr.message };
+
+  if (setLastBoughtOnSave) {
+    const today = new Date().toISOString().slice(0, 10);
+    const upserts = items.map((i) => ({ household_id: session.household_id, item_key: i.id, last_bought: today }));
+    const { error: metaErr } = await supabase.from("shopping_item_meta").upsert(upserts, { onConflict: "household_id,item_key" });
+    if (metaErr) return { statusCode: 500, body: metaErr.message };
+  }
 
   return { statusCode: 200, body: JSON.stringify({ id: list.id, share_token: list.share_token, description: list.description }) };
 };

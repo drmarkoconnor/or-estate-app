@@ -13,6 +13,7 @@ create table if not exists room_photos (
   room_id uuid not null references rooms(id) on delete cascade,
   storage_path text not null,
   caption text,
+  is_hero boolean not null default false,
   created_at timestamptz not null default now()
 );
 create index if not exists idx_room_photos_room on room_photos(room_id);
