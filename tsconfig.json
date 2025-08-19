@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "outDir": "dist"
+  },
+  "include": ["netlify/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist", "_site"]
+}

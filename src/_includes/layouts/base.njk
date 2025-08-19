@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title or "Old Rectory" }}</title>
+    <link rel="stylesheet" href="/styles/main.css" />
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="/">Home</a>
+        <span> · </span>
+        <a href="/tasks/">Tasks</a>
+        <span> · </span>
+        <a href="/rooms/">Rooms</a>
+      </nav>
+    </header>
+    <main>
+      {{ content | safe }}
+    </main>
+    <footer>
+      <p class="muted">© Old Rectory</p>
+    </footer>
+  </body>
+</html>

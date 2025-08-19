@@ -1,0 +1,25 @@
+# Node
+node_modules/
+.npm/
+
+# Env
+.env
+.env.*.local
+
+# Build output
+_site/
+dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor
+.DS_Store
+.vscode/
+.idea/
+
+# Netlify
+.netlify/

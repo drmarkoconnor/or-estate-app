@@ -1,0 +1,13 @@
+{
+  "root": true,
+  "env": { "es2022": true, "node": true },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": { "sourceType": "module", "project": false },
+  "plugins": ["@typescript-eslint", "simple-import-sort"],
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
+  "rules": {
+    "simple-import-sort/imports": "warn",
+    "simple-import-sort/exports": "warn"
+  },
+  "ignorePatterns": ["_site/**", "dist/**", "node_modules/**"]
+}

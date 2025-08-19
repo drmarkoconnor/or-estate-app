@@ -1,0 +1,41 @@
+---
+layout: layouts/base.njk
+title: Old Rectory OS
+---
+<header>
+  <h1>Old Rectory Household OS</h1>
+  <p class="muted">Private dashboard</p>
+</header>
+<main>
+  <div class="card">
+    <p>Welcome. This is a minimal landing page. After login, you'll see your dashboard.</p>
+    <form id="loginForm" method="post" action="/.netlify/functions/login">
+      <div>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required />
+      </div>
+      <div>
+        <label for="passphrase">Passphrase</label>
+        <input id="passphrase" name="passphrase" type="password" required />
+      </div>
+      <button class="btn" type="submit">Sign In</button>
+    </form>
+    <p id="loginError" class="muted" style="color:#ff8389"></p>
+  </div>
+</main>
+<script>
+  const form = document.getElementById('loginForm');
+  const err = document.getElementById('loginError');
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.textContent = '';
+    const body = new URLSearchParams(new FormData(form));
+    const res = await fetch('/.netlify/functions/login', { method: 'POST', body });
+    if (res.status === 204) {
+      location.href = '/dashboard/';
+    } else {
+      const txt = await res.text();
+      err.textContent = txt || 'Login failed';
+    }
+  });
+</script>

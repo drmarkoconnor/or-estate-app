@@ -1,0 +1,23 @@
+---
+layout: layouts/base.njk
+title: Dashboard
+---
+<div class="card">
+  <h2 id="greeting">Dashboard</h2>
+  <p>After you sign in, this page will show your tasks and expiring documents.</p>
+  <form method="post" action="/.netlify/functions/logout">
+    <button class="btn" type="submit">Sign out</button>
+  </form>
+</div>
+<script>
+  (async () => {
+    const res = await fetch('/.netlify/functions/whoami');
+    if (res.status === 401) {
+      location.href = '/';
+      return;
+    }
+    const j = await res.json();
+    const h2 = document.getElementById('greeting');
+    if (h2 && j?.email) h2.textContent = `Hello, ${j.email}`;
+  })();
+</script>

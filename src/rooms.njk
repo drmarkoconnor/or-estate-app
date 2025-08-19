@@ -1,0 +1,57 @@
+---
+layout: layouts/base.njk
+title: Rooms
+---
+<section class="card">
+  <h2>Rooms</h2>
+  <div id="rooms"></div>
+</section>
+<section class="card">
+  <h3>Add / Edit Room</h3>
+  <form id="roomForm">
+    <input type="hidden" name="id" id="id" />
+    <label for="name">Name</label>
+    <input id="name" name="name" required />
+    <label for="floor">Floor</label>
+    <input id="floor" name="floor" />
+    <label for="dimensions">Dimensions</label>
+    <input id="dimensions" name="dimensions" />
+    <label for="notes">Notes</label>
+    <textarea id="notes" name="notes"></textarea>
+    <button class="btn" type="submit">Save</button>
+  </form>
+  <p id="msg" class="muted"></p>
+</section>
+<script>
+(async function() {
+  const listEl = document.getElementById('rooms');
+  const form = document.getElementById('roomForm');
+  const msg = document.getElementById('msg');
+  async function loadRooms() {
+    const r = await fetch('/.netlify/functions/rooms.list');
+    if (r.status === 401) { location.href = '/'; return; }
+    const rooms = await r.json();
+    listEl.innerHTML = rooms.map(r => `<div class="card"><strong>${r.name}</strong><br/><small>${r.floor||''} ${r.dimensions||''}</small><p>${r.notes||''}</p></div>`).join('') || '<p class="muted">No rooms yet.</p>';
+  }
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msg.textContent = '';
+    const payload = Object.fromEntries(new FormData(form).entries());
+    if (!payload.id) delete payload.id;
+    const res = await fetch('/.netlify/functions/rooms.upsert', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      form.reset();
+      msg.textContent = 'Saved';
+      await loadRooms();
+    } else {
+      const t = await res.text();
+      msg.textContent = t || 'Error';
+    }
+  });
+  await loadRooms();
+})();
+</script>
