@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg bg-brand-600 text-white px-4 py-2 text-base font-medium shadow-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-400 active:bg-brand-800 transition;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border border-brand-200 text-brand-800 px-4 py-2 text-base font-medium hover:bg-brand-50;
+  }
+  .card {
+    @apply rounded-xl border border-gray-200 bg-white/80 backdrop-blur shadow-sm p-4 md:p-6;
+  }
+  .muted {
+    @apply text-gray-500;
+  }
+}

@@ -5,7 +5,7 @@ export const handler: Handler = async () => {
   return {
     statusCode: 204,
     headers: {
-      "Set-Cookie": clearSessionCookie()
-    }
+      "Set-Cookie": clearSessionCookie(),
+    },
   };
 };

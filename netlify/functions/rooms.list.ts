@@ -12,7 +12,11 @@ export const handler: Handler = async (event) => {
       .eq("household_id", session.household_id)
       .order("name", { ascending: true });
     if (error) throw error;
-    return { statusCode: 200, headers: { "content-type": "application/json" }, body: JSON.stringify(data || []) };
+    return {
+      statusCode: 200,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(data || []),
+    };
   } catch (e) {
     const err = e as { message?: string; status?: number };
     const status = err.status || 500;

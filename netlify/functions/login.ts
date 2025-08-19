@@ -5,7 +5,7 @@ import { getServiceClient } from "../lib/supabase";
 
 const schema = z.object({
   email: z.string().email(),
-  passphrase: z.string().min(6)
+  passphrase: z.string().min(6),
 });
 
 export const handler: Handler = async (event) => {
@@ -54,14 +54,14 @@ export const handler: Handler = async (event) => {
   const session = {
     user_id: "00000000-0000-0000-0000-000000000001",
     household_id,
-    email
+    email,
   };
   const cookie = await createSessionCookie(session);
 
   return {
     statusCode: 204,
     headers: {
-      "Set-Cookie": cookie
-    }
+      "Set-Cookie": cookie,
+    },
   };
 };

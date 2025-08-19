@@ -1,10 +1,72 @@
-:root{--bg:#0d1117;--fg:#e6edf3;--muted:#8b949e;--accent:#2f81f7}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,"Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji"}
-header,main,footer{max-width:920px;margin:0 auto;padding:1rem}
-a{color:var(--accent)}
-input,button,select,textarea{font:inherit}
-.btn{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:.5rem .8rem;cursor:pointer}
-.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1rem;margin:.75rem 0}
-label{display:block;margin:.4rem 0 .2rem;color:var(--muted)}
-input,select,textarea{width:100%;padding:.5rem;border-radius:6px;border:1px solid #30363d;background:#0b0f14;color:var(--fg)}
+:root {
+  --bg: #0d1117;
+  --fg: #e6edf3;
+  --muted: #8b949e;
+  --accent: #2f81f7;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font:
+    16px/1.5 system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Ubuntu,
+    Cantarell,
+    Noto Sans,
+    "Helvetica Neue",
+    Arial,
+    "Apple Color Emoji",
+    "Segoe UI Emoji";
+}
+header,
+main,
+footer {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+a {
+  color: var(--accent);
+}
+input,
+button,
+select,
+textarea {
+  font: inherit;
+}
+.btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+}
+.card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0.75rem 0;
+}
+label {
+  display: block;
+  margin: 0.4rem 0 0.2rem;
+  color: var(--muted);
+}
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  background: #0b0f14;
+  color: var(--fg);
+}

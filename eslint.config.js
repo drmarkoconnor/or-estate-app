@@ -3,7 +3,7 @@ import tseslint from "typescript-eslint";
 
 export default [
   {
-    ignores: ["_site/**", "dist/**", "node_modules/**", "scripts/**", "tests/**"]
+    ignores: ["_site/**", "dist/**", "node_modules/**", "scripts/**", "tests/**"],
   },
   ...tseslint.configs.recommended,
   {
@@ -11,7 +11,7 @@ export default [
     rules: {
       "simple-import-sort/imports": "warn",
       "simple-import-sort/exports": "warn",
-      "@typescript-eslint/no-explicit-any": "off"
-    }
-  }
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
 ];

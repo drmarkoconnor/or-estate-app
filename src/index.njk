@@ -2,27 +2,28 @@
 layout: layouts/base.njk
 title: Old Rectory OS
 ---
-<header>
-  <h1>Old Rectory Household OS</h1>
-  <p class="muted">Private dashboard</p>
-</header>
-<main>
+<section class="grid md:grid-cols-2 gap-6">
   <div class="card">
-    <p>Welcome. This is a minimal landing page. After login, you'll see your dashboard.</p>
-    <form id="loginForm" method="post" action="/.netlify/functions/login">
+    <h1 class="text-2xl sm:text-3xl font-semibold mb-2">Old Rectory Household OS</h1>
+    <p class="muted mb-4">Private dashboard for rooms, assets, tasks, and documents.</p>
+    <form id="loginForm" method="post" action="/.netlify/functions/login" class="space-y-3">
       <div>
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" required />
+        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+        <input id="email" name="email" type="email" required class="mt-1 block w-full rounded-lg border-gray-300 focus:border-brand-500 focus:ring-brand-500" />
       </div>
       <div>
-        <label for="passphrase">Passphrase</label>
-        <input id="passphrase" name="passphrase" type="password" required />
+        <label for="passphrase" class="block text-sm font-medium text-gray-700">Passphrase</label>
+        <input id="passphrase" name="passphrase" type="password" required class="mt-1 block w-full rounded-lg border-gray-300 focus:border-brand-500 focus:ring-brand-500" />
       </div>
-      <button class="btn" type="submit">Sign In</button>
+      <button class="btn w-full sm:w-auto" type="submit">Sign In</button>
+      <p id="loginError" class="muted"></p>
     </form>
-    <p id="loginError" class="muted" style="color:#ff8389"></p>
   </div>
-</main>
+  <div class="card">
+    <h2 class="text-xl font-semibold mb-2">Today</h2>
+    <p class="muted">After login you’ll see due tasks and expiring documents here.</p>
+  </div>
+</section>
 <script>
   const form = document.getElementById('loginForm');
   const err = document.getElementById('loginError');

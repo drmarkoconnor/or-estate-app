@@ -7,7 +7,7 @@ export const handler: Handler = async (event) => {
     return {
       statusCode: 200,
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(session)
+      body: JSON.stringify(session),
     };
   } catch (e) {
     const err = e as { statusCode?: number; message?: string };

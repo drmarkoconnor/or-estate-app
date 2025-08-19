@@ -1,26 +1,35 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-full bg-gradient-to-b from-white to-emerald-50/30">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ title or "Old Rectory" }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles/main.css" />
   </head>
-  <body>
-    <header>
-      <nav>
-        <a href="/">Home</a>
-        <span> · </span>
-        <a href="/tasks/">Tasks</a>
-        <span> · </span>
-        <a href="/rooms/">Rooms</a>
-      </nav>
+  <body class="min-h-full font-sans text-gray-900 antialiased">
+    <header class="sticky top-0 z-40 backdrop-blur bg-white/75 border-b border-gray-200">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex items-center justify-between">
+        <a class="text-xl sm:text-2xl font-semibold tracking-tight" href="/">Old Rectory</a>
+        <nav class="flex items-center gap-1 sm:gap-2">
+          <a class="btn px-3 py-2 sm:px-4 sm:py-2" href="/">Home</a>
+          <a class="btn-secondary px-3 py-2 sm:px-4 sm:py-2" href="/tasks/">Tasks</a>
+          <a class="btn-secondary px-3 py-2 sm:px-4 sm:py-2" href="/rooms/">Rooms</a>
+          <form method="post" action="/.netlify/functions/logout">
+            <button class="btn-secondary px-3 py-2 sm:px-4 sm:py-2" type="submit">Sign out</button>
+          </form>
+        </nav>
+      </div>
     </header>
-    <main>
+    <main class="mx-auto max-w-6xl px-4 sm:px-6 py-6">
       {{ content | safe }}
     </main>
-    <footer>
-      <p class="muted">© Old Rectory</p>
+    <footer class="border-t border-gray-200 bg-white/60">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 py-6">
+        <p class="text-sm text-gray-500">© Old Rectory</p>
+      </div>
     </footer>
   </body>
 </html>

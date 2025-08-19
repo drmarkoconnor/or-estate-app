@@ -1,12 +1,12 @@
 export default function (eleventyConfig) {
-  eleventyConfig.addPassthroughCopy({ "src/styles": "styles" });
+  // Tailwind builds to _site/styles/main.css
   return {
     dir: {
       input: "src",
-      output: "_site"
+      output: "_site",
     },
     templateFormats: ["njk", "md", "html"],
     htmlTemplateEngine: "njk",
-    markdownTemplateEngine: "njk"
+    markdownTemplateEngine: "njk",
   };
 }
