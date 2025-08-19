@@ -15,15 +15,18 @@ permalink: /shopping/
       <div id="catalog" class="mt-4 space-y-3 max-h-[60vh] overflow-auto pr-1"></div>
     </div>
     <div>
-      <label class="block text-sm font-medium">Title</label>
-      <input id="title" class="mt-1 block w-full rounded-lg border-gray-300 focus:border-brand-500 focus:ring-brand-500" placeholder="Shopping List" />
+  <label class="block text-sm font-medium">Title</label>
+  <input id="title" class="mt-1 block w-full rounded-lg border-gray-300 focus:border-brand-500 focus:ring-brand-500" placeholder="Shopping List" />
+  <label class="block text-sm font-medium mt-3">Description</label>
+  <textarea id="description" rows="3" class="mt-1 block w-full rounded-lg border-gray-300 focus:border-brand-500 focus:ring-brand-500" placeholder="Short description (optional)"></textarea>
       <div class="mt-4 card">
         <h3 class="text-lg font-semibold">Markdown Preview</h3>
         <pre id="md" class="mt-3 whitespace-pre-wrap text-sm"></pre>
       </div>
       <div class="mt-2 flex items-center gap-2">
         <button class="btn" id="copyBtn">Copy Markdown</button>
-        <a class="btn-secondary" id="viewLatest" href="#">View Saved List</a>
+  <a class="btn-secondary" id="viewLatest" href="#">View Saved List</a>
+  <a class="btn-secondary hidden" id="shareLink" href="#" target="_blank">Open Share Link</a>
       </div>
     </div>
   </div>
@@ -44,6 +47,8 @@ permalink: /shopping/
   const copyBtn = document.getElementById('copyBtn');
   const viewLatest = document.getElementById('viewLatest');
   const listsEl = document.getElementById('lists');
+  const descEl = document.getElementById('description');
+  const shareLink = document.getElementById('shareLink');
   const searchEl = document.getElementById('search');
   let chosen = [];
 
@@ -94,16 +99,24 @@ permalink: /shopping/
     const r = await fetch('/.netlify/functions/shopping-lists');
     if (!r.ok) return;
     const lists = await r.json();
-    listsEl.innerHTML = lists.map(l => `<div class=\"rounded-lg ring-1 ring-gray-200 bg-white/90 px-3 py-2 mb-2\"><a class=\"font-medium\" href=\"/shopping/view/?id=${l.id}\">${l.title}</a><span class=\"muted text-xs ml-2\">${new Date(l.created_at).toLocaleString()}</span></div>`).join('') || '<p class="muted">No lists yet.</p>';
+    listsEl.innerHTML = lists.map(l => `<div class=\"rounded-lg ring-1 ring-gray-200 bg-white/90 px-3 py-2 mb-2\">\
+      <a class=\"font-medium\" href=\"/shopping/view/?id=${l.id}\">${l.title}</a>\
+      <span class=\"muted text-xs ml-2\">${new Date(l.created_at).toLocaleString()}</span>\
+      ${l.description ? `<div class=\\"muted text-xs mt-1\\">${l.description}</div>` : ''}\
+    </div>`).join('') || '<p class="muted">No lists yet.</p>';
   }
 
   saveBtn.addEventListener('click', async () => {
     if (chosen.length === 0) return alert('Choose some items');
-    const res = await fetch('/.netlify/functions/shopping-list-create', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ title: titleEl.value || 'Shopping List', items: chosen }) });
+    const res = await fetch('/.netlify/functions/shopping-list-create', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ title: titleEl.value || 'Shopping List', description: descEl.value || undefined, items: chosen }) });
     if (!res.ok) return alert('Save failed');
-    const { id } = await res.json();
+    const { id, share_token } = await res.json();
     viewLatest.href = `/shopping/view/?id=${id}`;
     viewLatest.textContent = 'Open Saved List';
+    if (share_token) {
+      shareLink.href = `/shopping/share/?t=${share_token}`;
+      shareLink.classList.remove('hidden');
+    }
     await loadLists();
   });
 

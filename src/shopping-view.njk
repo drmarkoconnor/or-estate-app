@@ -5,6 +5,7 @@ permalink: /shopping/view/
 ---
 <section class="card">
   <h2 class="text-xl font-semibold">Shopping List</h2>
+  <p id="desc" class="muted mt-1 text-sm"></p>
   <div id="list" class="mt-3"></div>
 </section>
 <script>
@@ -16,6 +17,7 @@ permalink: /shopping/view/
   if (!r.ok) { document.getElementById('list').textContent = 'Not found'; return; }
   const data = await r.json();
   document.title = data.title + ' – Shopping';
+  if (data.description) { document.getElementById('desc').textContent = data.description; }
   const listEl = document.getElementById('list');
   listEl.innerHTML = data.items.map(it => `<label class=\"flex items-center gap-3 py-2\">\
     <input type=\"checkbox\" ${it.checked?'checked':''} data-id=\"${it.id}\" class=\"h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600\">\

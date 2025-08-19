@@ -8,7 +8,7 @@ export const handler: Handler = async (event) => {
   const supabase = getServiceClient();
   const { data, error } = await supabase
     .from("shopping_lists")
-    .select("id, title, created_at")
+    .select("id, title, description, created_at")
     .eq("household_id", session.household_id)
     .order("created_at", { ascending: false });
   if (error) return { statusCode: 500, body: error.message };

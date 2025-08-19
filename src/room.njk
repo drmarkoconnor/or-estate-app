@@ -1,0 +1,77 @@
+---
+layout: layouts/base.njk
+title: Room
+permalink: /room/
+---
+<section class="card p-0 overflow-hidden">
+  <div id="hero" class="relative w-full bg-gray-100 flex items-end" style="aspect-ratio: 16 / 9;">
+    <div class="w-full bg-gradient-to-t from-black/60 to-transparent p-4">
+      <h1 id="roomName" class="text-2xl sm:text-3xl font-semibold text-white"></h1>
+      <p id="roomMeta" class="text-white/80"></p>
+    </div>
+  </div>
+  <div class="p-4">
+    <h3 class="text-lg font-semibold">Media</h3>
+    <div id="media" class="mt-3 overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead>
+          <tr class="text-left text-gray-500">
+            <th class="py-2">Preview</th>
+            <th class="py-2">Title/Caption</th>
+            <th class="py-2">Type</th>
+            <th class="py-2">Open</th>
+          </tr>
+        </thead>
+        <tbody id="mediaRows"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<script>
+(async function(){
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  if (!id) { document.getElementById('roomName').textContent='Missing id'; return; }
+  // Load room basic info from list endpoint
+  const roomsRes = await fetch('/.netlify/functions/rooms-list');
+  if (!roomsRes.ok) { document.getElementById('roomName').textContent='Error'; return; }
+  const rooms = await roomsRes.json();
+  const room = rooms.find(r => r.id === id);
+  if (!room) { document.getElementById('roomName').textContent='Room not found'; return; }
+  document.getElementById('roomName').textContent = room.name;
+  document.getElementById('roomMeta').textContent = [room.floor, room.dimensions].filter(Boolean).join(' • ');
+
+  // Load media
+  const r = await fetch(`/.netlify/functions/room-media-list?room_id=${id}`);
+  if (!r.ok) return;
+  const { photos, documents } = await r.json();
+  const hero = document.getElementById('hero');
+  if (photos && photos.length) {
+    const src = `/.netlify/functions/storage-proxy?bucket=photos&path=${encodeURIComponent(photos[0].storage_path)}`;
+    hero.style.backgroundImage = `url(${src})`;
+    hero.style.backgroundSize = 'cover';
+    hero.style.backgroundPosition = 'center';
+  }
+  const tbody = document.getElementById('mediaRows');
+  const rows = [];
+  for (const p of photos) {
+    const thumb = `/.netlify/functions/storage-proxy?bucket=photos&path=${encodeURIComponent(p.storage_path)}`;
+    rows.push(`<tr>
+  <td class=\"py-2\"><div class=\"w-28 bg-gray-100 rounded overflow-hidden\" style=\"aspect-ratio:16/9;\"><img src=\"${thumb}\" class=\"w-full h-full object-cover\" /></div></td>
+      <td class=\"py-2\">${p.caption || ''}</td>
+      <td class=\"py-2\">Photo</td>
+      <td class=\"py-2\"><a class=\"btn-secondary px-2 py-1\" target=\"_blank\" href=\"${thumb}\">Open</a></td>
+    </tr>`);
+  }
+  for (const d of documents) {
+    const href = `/.netlify/functions/storage-proxy?bucket=docs&path=${encodeURIComponent(d.storage_path)}`;
+    rows.push(`<tr>
+      <td class=\"py-2\">📄</td>
+      <td class=\"py-2\">${d.title || 'Document'}</td>
+      <td class=\"py-2\">Document</td>
+      <td class=\"py-2\"><a class=\"btn-secondary px-2 py-1\" target=\"_blank\" href=\"${href}\">Open</a></td>
+    </tr>`);
+  }
+  tbody.innerHTML = rows.join('') || '<tr><td class="py-3" colspan="4">No media yet.</td></tr>';
+})();
+</script>
