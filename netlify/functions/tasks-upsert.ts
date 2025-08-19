@@ -5,7 +5,7 @@ import { getServiceClient } from "../lib/supabase";
 
 const schema = z.object({
   id: z.string().uuid().optional(),
-  title: z.string().min(1),
+  title: z.string().optional(),
   description: z.string().optional(),
   priority: z.enum(["low", "normal", "high"]).optional(),
   due_date: z.string().optional(),
@@ -20,7 +20,13 @@ export const handler: Handler = async (event) => {
   const supabase = getServiceClient();
   const parsed = schema.safeParse(JSON.parse(event.body || "{}"));
   if (!parsed.success) return { statusCode: 400, body: JSON.stringify(parsed.error.flatten()) };
-  const payload = parsed.data;
+  const payload = parsed.data as any;
+
+  // Enforce title on create
+  if (!payload.id) {
+    const title = (payload.title || "").toString().trim();
+    if (!title) return { statusCode: 400, body: "title is required" };
+  }
 
   if (payload.id) {
     const id = payload.id;

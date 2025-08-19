@@ -7,10 +7,7 @@ export const handler: Handler = async (event) => {
   const session = await requireAuth(event);
   const supabase = getServiceClient();
 
-  // Expect multipart/form-data with: file, kind (photo|doc), room_id, title(optional)
-  const ct = event.headers["content-type"] || event.headers["Content-Type"] || "";
-  if (!ct.includes("multipart/form-data"))
-    return { statusCode: 400, body: "Expected multipart/form-data" };
+  // Using signed upload URL flow; no body is required for this init call.
 
   // Netlify Functions don't parse multipart; use raw body (base64) and simple fields via query as a pragmatic MVP
   // For MVP: allow uploads via presigned URL flow
