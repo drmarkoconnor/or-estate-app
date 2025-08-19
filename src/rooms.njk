@@ -38,7 +38,7 @@ title: Rooms
   const form = document.getElementById('roomForm');
   const msg = document.getElementById('msg');
   async function loadRooms() {
-    const r = await fetch('/.netlify/functions/rooms.list');
+    const r = await fetch('/.netlify/functions/rooms-list');
     if (r.status === 401) { location.href = '/'; return; }
     const rooms = await r.json();
     listEl.innerHTML = rooms.map(r => `
@@ -57,7 +57,7 @@ title: Rooms
     msg.textContent = '';
     const payload = Object.fromEntries(new FormData(form).entries());
     if (!payload.id) delete payload.id;
-    const res = await fetch('/.netlify/functions/rooms.upsert', {
+    const res = await fetch('/.netlify/functions/rooms-upsert', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload)
