@@ -5,7 +5,7 @@ permalink: /room/
 ---
 <section class="card p-0 overflow-hidden">
   <div id="hero" class="relative w-full bg-gray-100 flex items-end" style="aspect-ratio: 16 / 9;">
-    <div class="w-full bg-gradient-to-t from-black/60 to-transparent p-4">
+    <div class="relative z-10 w-full bg-gradient-to-t from-black/60 to-transparent p-4">
       <h1 id="roomName" class="text-2xl sm:text-3xl font-semibold text-white"></h1>
       <p id="roomMeta" class="text-white/80"></p>
     </div>
@@ -230,7 +230,7 @@ permalink: /room/
       const res = await fetch(`/.netlify/functions/room-toc-list?room_id=${encodeURIComponent(id)}`);
       if (!res.ok) { ul.innerHTML = '<li class="text-sm text-gray-500">Unable to load ToC</li>'; return; }
       const data = await res.json();
-      const items = Array.isArray(data?.items) ? data.items : [];
+      const items = Array.isArray(data) ? data : [];
       if (!items.length) { ul.innerHTML = '<li class="text-sm text-gray-500">No entries yet</li>'; return; }
       ul.innerHTML = items.map(it => `<li>${(it.line || '').replace(/</g, '&lt;')}</li>`).join('');
     } catch { /* ignore */ }

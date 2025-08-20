@@ -55,7 +55,7 @@ permalink: /shopping/
 
 <script>
 (function(){
-  const data = {{ shopping | dump | safe }};
+  const catalogData = {{ shopping | dump | safe }};
   const catalogEl = document.getElementById('catalog');
   const mdEl = document.getElementById('md');
   const titleEl = document.getElementById('title');
@@ -78,8 +78,12 @@ permalink: /shopping/
   function flattenCatalog(filterText){
     const out = [];
     const ft = (filterText||'').toLowerCase();
-    for (const cat of Object.keys(data)){
-      const sub = data[cat];
+    if (!catalogData || typeof catalogData !== 'object') {
+      console.error('Shopping catalog missing or invalid');
+      return out;
+    }
+    for (const cat of Object.keys(catalogData)){
+      const sub = catalogData[cat];
       for (const subcat of Object.keys(sub)){
         const items = sub[subcat];
         for (const it of items){
@@ -147,10 +151,10 @@ permalink: /shopping/
     const r = await fetch('/.netlify/functions/shopping-lists');
     if (!r.ok) return;
     const lists = await r.json();
-    listsEl.innerHTML = lists.map(l => `<div class=\"rounded-lg ring-1 ring-gray-200 bg-white/90 px-3 py-2 mb-2\">\
-      <a class=\"font-medium\" href=\"/shopping/view/?id=${l.id}\">${l.title}</a>\
-      <span class=\"muted text-xs ml-2\">${new Date(l.created_at).toLocaleString()}</span>\
-      ${l.description ? `<div class=\\"muted text-xs mt-1\\">${l.description}</div>` : ''}\
+    listsEl.innerHTML = lists.map(l => `<div class="rounded-lg ring-1 ring-gray-200 bg-white/90 px-3 py-2 mb-2">\
+      <a class="font-medium" href="/shopping/view/?id=${l.id}">${l.title}</a>\
+      <span class="muted text-xs ml-2">${new Date(l.created_at).toLocaleString()}</span>\
+      ${l.description ? `<div class="muted text-xs mt-1">${l.description}</div>` : ''}\
     </div>`).join('') || '<p class="muted">No lists yet.</p>';
   }
 
@@ -175,38 +179,77 @@ permalink: /shopping/
   });
 
   searchEl.addEventListener('input', renderCatalog);
-  // voice capture for shopping list
+  // voice capture for shopping list (with Safari/MP4 fallback)
   const micBtn = document.getElementById('micBtn');
   const micStatus = document.getElementById('micStatus');
-  async function recordAndTranscribe(){
-    try {
-      micStatus.textContent = 'Recording… click again to stop';
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const chunks = [];
-      const rec = new MediaRecorder(stream);
-      rec.ondataavailable = (e) => chunks.push(e.data);
-      const done = new Promise(resolve => { rec.onstop = () => resolve(new Blob(chunks, { type: 'audio/webm' })); });
-      rec.start();
-      await new Promise(r => micBtn.onclick = () => { rec.stop(); stream.getTracks().forEach(t=>t.stop()); r(null); });
-      micStatus.textContent = 'Transcribing…';
-      const audio = await done;
-      const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type || 'audio/webm', 'x-filename': 'speech.webm' }, body: audio });
-      if (res.status === 401) { micStatus.textContent = 'Please sign in'; return; }
-      if (!res.ok) { micStatus.textContent = 'Transcribe failed'; return; }
-      const { text } = await res.json();
-      micStatus.textContent = 'Parsed';
-      // naive split by comma or newline
-      const parts = text.split(/[\n,]/).map(s => s.trim()).filter(Boolean);
-      const flat = flattenCatalog();
-      for (const p of parts){
-        const match = flat.find(it => it.name.toLowerCase() === p.toLowerCase() || it.name.toLowerCase().includes(p.toLowerCase()));
-        if (match && !chosen.find(c => c.id === match.id)) chosen.push({ id: match.id, name: match.name, source: match.source });
-      }
-      renderCatalog(); renderMarkdown();
-      micStatus.textContent = parts.length ? `Added ${parts.length} items` : 'No matches';
-    } catch(e){ micStatus.textContent = 'Mic error'; }
+  let recording = false;
+  let activeRecorder = null;
+  let activeStream = null;
+  let stopTimer = null;
+  function pickMime(){
+    const candidates = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4;codecs=mp4a.40.2',
+      'audio/mp4',
+      'audio/ogg;codecs=opus',
+      'audio/ogg'
+    ];
+    for (const t of candidates){
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported(t)) return t;
+    }
+    return '';
   }
-  micBtn.addEventListener('click', recordAndTranscribe, { once: true });
+  async function toggleMic(){
+    try {
+      if (!recording){
+        micStatus.textContent = 'Recording… click again to stop';
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        activeStream = stream;
+        const chunks = [];
+        const mimeType = pickMime();
+        const rec = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+        activeRecorder = rec;
+        rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+        const done = new Promise(resolve => { rec.onstop = () => resolve(new Blob(chunks, { type: mimeType || 'audio/webm' })); });
+        rec.start();
+        recording = true;
+        micBtn.classList.add('opacity-70');
+        // auto stop after 30s
+        stopTimer = setTimeout(()=>{ if (recording) rec.stop(); }, 30000);
+        const audio = await done;
+        // cleanup
+        clearTimeout(stopTimer); stopTimer = null;
+        activeStream.getTracks().forEach(t=>t.stop());
+        activeStream = null; activeRecorder = null; recording = false; micBtn.classList.remove('opacity-70');
+        micStatus.textContent = 'Transcribing…';
+        const filename = (mimeType && mimeType.includes('mp4')) ? 'speech.m4a' : (mimeType && mimeType.includes('ogg') ? 'speech.ogg' : 'speech.webm');
+        const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type || mimeType || 'audio/webm', 'x-filename': filename }, body: audio });
+        if (res.status === 401) { micStatus.textContent = 'Please sign in'; return; }
+        if (!res.ok) { micStatus.textContent = 'Transcribe failed'; return; }
+        const { text } = await res.json();
+        micStatus.textContent = 'Parsed';
+        const parts = text.split(/[\n,]/).map(s => s.trim()).filter(Boolean);
+        const flat = flattenCatalog();
+        for (const p of parts){
+          const match = flat.find(it => it.name.toLowerCase() === p.toLowerCase() || it.name.toLowerCase().includes(p.toLowerCase()));
+          if (match && !chosen.find(c => c.id === match.id)) chosen.push({ id: match.id, name: match.name, source: match.source });
+        }
+        renderCatalog(); renderMarkdown();
+        micStatus.textContent = parts.length ? `Added ${parts.length} items` : 'No matches';
+      } else {
+        // stop
+        if (activeRecorder) activeRecorder.stop();
+      }
+    } catch(e){
+      console.error(e);
+      try { if (activeStream) activeStream.getTracks().forEach(t=>t.stop()); } catch {}
+      recording = false; activeRecorder = null; activeStream = null; if (stopTimer) clearTimeout(stopTimer);
+      micBtn.classList.remove('opacity-70');
+      micStatus.textContent = 'Mic error';
+    }
+  }
+  micBtn.addEventListener('click', toggleMic);
   favFilterEl.addEventListener('change', renderCatalog);
   sortByEl.addEventListener('change', renderCatalog);
   addAllBtn.addEventListener('click', () => {
