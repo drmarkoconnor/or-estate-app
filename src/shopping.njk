@@ -54,7 +54,7 @@ permalink: /shopping/
 </section>
 
 <script>
-(function(){
+(async function(){
   const catalogData = {{ shopping | dump | safe }};
   const catalogEl = document.getElementById('catalog');
   const mdEl = document.getElementById('md');
