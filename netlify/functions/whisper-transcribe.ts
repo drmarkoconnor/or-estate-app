@@ -15,7 +15,7 @@ export const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return { statusCode: 500, body: "Missing OPENAI_API_KEY" };
-  const model = process.env.OPENAI_TRANSCRIBE_MODEL || "whisper-1";
+  const model = process.env.OPENAI_TRANSCRIBE_MODEL || "gpt-4o-mini-transcribe";
   const timeoutMs = Number(process.env.OPENAI_TIMEOUT_MS || 20000);
   const ip = (event.headers["x-forwarded-for"] as string) || "0.0.0.0";
   if (!allowRate(`stt:${ip}`, 10, 60_000)) return { statusCode: 429, body: "Too Many Requests" };
@@ -66,7 +66,7 @@ export const handler: Handler = async (event) => {
   const resp = await doFetch(0);
   if (!resp.ok) {
     const t = await resp.text();
-    return { statusCode: 500, body: t };
+    return { statusCode: resp.status, body: t };
   }
   const data = await resp.json();
   const latency = Date.now() - started;

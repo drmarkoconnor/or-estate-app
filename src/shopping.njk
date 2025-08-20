@@ -229,7 +229,7 @@ permalink: /shopping/
         const filename = (mimeType && mimeType.includes('mp4')) ? 'speech.m4a' : (mimeType && mimeType.includes('ogg') ? 'speech.ogg' : 'speech.webm');
   const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type || mimeType || 'audio/webm', 'x-filename': filename, 'x-base64': '0' }, body: audio });
         if (res.status === 401) { micStatus.textContent = 'Please sign in'; return; }
-        if (!res.ok) { micStatus.textContent = 'Transcribe failed'; return; }
+  if (!res.ok) { micStatus.textContent = 'Transcribe failed: ' + (await res.text()).slice(0,180); return; }
         const { text } = await res.json();
         micStatus.textContent = 'Parsed';
         const parts = text.split(/[\n,]/).map(s => s.trim()).filter(Boolean);

@@ -260,7 +260,7 @@ permalink: /room/
         const audio = new Blob(chunks, { type: 'audio/webm' });
         const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type || 'audio/webm', 'x-filename': 'speech.webm', 'x-base64': '0' }, body: audio });
         if (res.status === 401) { roomMicStatus.textContent = 'Please sign in'; return; }
-        if (!res.ok) { roomMicStatus.textContent = 'Transcribe failed'; return; }
+  if (!res.ok) { roomMicStatus.textContent = 'Transcribe failed: ' + (await res.text()).slice(0,180); return; }
         const { text } = await res.json();
         if (!text) { roomMicStatus.textContent = 'No text'; return; }
         const addRes = await fetch('/.netlify/functions/room-toc-add', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ room_id: id, line: text }) });
