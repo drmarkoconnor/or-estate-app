@@ -20,10 +20,14 @@ export const handler: Handler = async (event) => {
   if (!parsed.success) return { statusCode: 400, body: JSON.stringify(parsed.error.flatten()) };
   const { title, description, items, setLastBoughtOnSave } = parsed.data;
 
-    const { data: list, error: listErr } = await supabase
-      .from("shopping_lists")
-  .insert({ household_id: session.household_id, title: title || "Shopping List", description: description || null })
-  .select("id, share_token, description")
+  const { data: list, error: listErr } = await supabase
+    .from("shopping_lists")
+    .insert({
+      household_id: session.household_id,
+      title: title || "Shopping List",
+      description: description || null,
+    })
+    .select("id, share_token, description")
     .single();
   if (listErr) return { statusCode: 500, body: listErr.message };
 
@@ -38,10 +42,23 @@ export const handler: Handler = async (event) => {
 
   if (setLastBoughtOnSave) {
     const today = new Date().toISOString().slice(0, 10);
-    const upserts = items.map((i) => ({ household_id: session.household_id, item_key: i.id, last_bought: today }));
-    const { error: metaErr } = await supabase.from("shopping_item_meta").upsert(upserts, { onConflict: "household_id,item_key" });
+    const upserts = items.map((i) => ({
+      household_id: session.household_id,
+      item_key: i.id,
+      last_bought: today,
+    }));
+    const { error: metaErr } = await supabase
+      .from("shopping_item_meta")
+      .upsert(upserts, { onConflict: "household_id,item_key" });
     if (metaErr) return { statusCode: 500, body: metaErr.message };
   }
 
-  return { statusCode: 200, body: JSON.stringify({ id: list.id, share_token: list.share_token, description: list.description }) };
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      id: list.id,
+      share_token: list.share_token,
+      description: list.description,
+    }),
+  };
 };

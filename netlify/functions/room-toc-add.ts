@@ -9,10 +9,12 @@ export const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
   const session = await requireAuth(event);
   const supabase = getServiceClient();
-  const parsed = schema.safeParse(JSON.parse(event.body || '{}'));
+  const parsed = schema.safeParse(JSON.parse(event.body || "{}"));
   if (!parsed.success) return { statusCode: 400, body: JSON.stringify(parsed.error.flatten()) };
   const { room_id, line } = parsed.data;
-  const { error } = await supabase.from('room_toc').insert({ household_id: session.household_id, room_id, line });
+  const { error } = await supabase
+    .from("room_toc")
+    .insert({ household_id: session.household_id, room_id, line });
   if (error) return { statusCode: 500, body: error.message };
   return { statusCode: 200, body: JSON.stringify({ ok: true }) };
 };

@@ -22,8 +22,13 @@ export const handler: Handler = async (event) => {
 
   // Expect raw audio bytes; content-type like audio/webm or audio/ogg; filename via header for OpenAI
   const ct = event.headers["content-type"] || "application/octet-stream";
-  const fileName = (event.headers["x-filename"] as string) || `audio.${ct.includes("ogg") ? "ogg" : ct.includes("mp3") ? "mp3" : "webm"}`;
-  const bytes = event.isBase64Encoded && event.body ? Buffer.from(event.body, 'base64') : Buffer.from(event.body || '', 'utf8');
+  const fileName =
+    (event.headers["x-filename"] as string) ||
+    `audio.${ct.includes("ogg") ? "ogg" : ct.includes("mp3") ? "mp3" : "webm"}`;
+  const bytes =
+    event.isBase64Encoded && event.body
+      ? Buffer.from(event.body, "base64")
+      : Buffer.from(event.body || "", "utf8");
   if (!bytes.length) return { statusCode: 400, body: "No audio" };
   // size guard (~10MB)
   const maxBytes = Number(process.env.STT_MAX_BYTES || 10_000_000);
@@ -65,5 +70,9 @@ export const handler: Handler = async (event) => {
   }
   const data = await resp.json();
   const latency = Date.now() - started;
-  return { statusCode: 200, body: JSON.stringify({ text: data.text || data.text?.trim?.() || "" }), headers: { "x-openai-latency-ms": String(latency) } };
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ text: data.text || data.text?.trim?.() || "" }),
+    headers: { "x-openai-latency-ms": String(latency) },
+  };
 };

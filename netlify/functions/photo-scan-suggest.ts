@@ -50,11 +50,13 @@ export const handler: Handler = async (event) => {
     if (photo.household_id !== session.household_id || photo.room_id !== room_id)
       return { statusCode: 403, body: "Forbidden" };
 
-  // Create a short-lived signed URL to the image in Supabase Storage (photos bucket)
-    const signed = await supabase.storage.from("photos").createSignedUrl(photo.storage_path, 60 * 5);
+    // Create a short-lived signed URL to the image in Supabase Storage (photos bucket)
+    const signed = await supabase.storage
+      .from("photos")
+      .createSignedUrl(photo.storage_path, 60 * 5);
     if (signed.error) return { statusCode: 500, body: signed.error.message };
     const imageUrl = signed.data.signedUrl;
-  // Optional heuristic: reject very large originals based on naming; client should upload reasonable sizes
+    // Optional heuristic: reject very large originals based on naming; client should upload reasonable sizes
 
     // Cache lookup: by photo_id + storage_path
     const cacheRes = await supabase
@@ -64,7 +66,11 @@ export const handler: Handler = async (event) => {
       .eq("storage_path", photo.storage_path)
       .maybeSingle();
     if (cacheRes.data && !body?.force) {
-      return { statusCode: 200, body: JSON.stringify(cacheRes.data), headers: { "x-cache": "hit", "x-openai-latency-ms": "0" } };
+      return {
+        statusCode: 200,
+        body: JSON.stringify(cacheRes.data),
+        headers: { "x-cache": "hit", "x-openai-latency-ms": "0" },
+      };
     }
 
     // Ask a vision model to extract items. Use JSON response format for structured output
@@ -74,7 +80,7 @@ export const handler: Handler = async (event) => {
       "Prefer durable assets over consumables. Limit to top 12 items. Avoid duplicates. If uncertain, still propose with lower confidence.";
 
     const userText =
-      "Extract a concise list of household items visible in this photo. Respond ONLY with JSON in this shape: {\n  \"items\": [\n    { \"name\": string, \"category\": string, \"confidence\": number }\n  ]\n}\n";
+      'Extract a concise list of household items visible in this photo. Respond ONLY with JSON in this shape: {\n  "items": [\n    { "name": string, "category": string, "confidence": number }\n  ]\n}\n';
 
     // Timeout + retries
     const started = Date.now();
@@ -141,18 +147,32 @@ export const handler: Handler = async (event) => {
       .map((x) => ({
         name: String(x.name).slice(0, 80),
         category: x.category ? String(x.category).slice(0, 40) : undefined,
-        confidence: typeof x.confidence === "number" ? Math.max(0, Math.min(1, x.confidence)) : undefined,
+        confidence:
+          typeof x.confidence === "number" ? Math.max(0, Math.min(1, x.confidence)) : undefined,
       }))
       .slice(0, 20);
 
     // upsert cache
     await supabase
       .from("room_photo_scan_cache")
-      .upsert({ photo_id, storage_path: photo.storage_path, items: clean }, { onConflict: "photo_id,storage_path" });
+      .upsert(
+        { photo_id, storage_path: photo.storage_path, items: clean },
+        { onConflict: "photo_id,storage_path" }
+      );
 
     const latency = Date.now() - started;
-    console.log("photo-scan", { household: session.household_id, photo_id, model, latency_ms: latency, items: clean.length });
-  return { statusCode: 200, body: JSON.stringify({ items: clean }), headers: { "x-openai-latency-ms": String(latency), "x-cache": "miss" } };
+    console.log("photo-scan", {
+      household: session.household_id,
+      photo_id,
+      model,
+      latency_ms: latency,
+      items: clean.length,
+    });
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ items: clean }),
+      headers: { "x-openai-latency-ms": String(latency), "x-cache": "miss" },
+    };
   } catch (e: any) {
     return { statusCode: 500, body: e?.message || "Scan failed" };
   }

@@ -21,10 +21,12 @@ export const handler: Handler = async (event) => {
   if (favorite !== undefined) patch.favorite = favorite;
   if (last_bought !== undefined) patch.last_bought = last_bought;
 
-  const { error } = await supabase.from("shopping_item_meta").upsert(
-    { household_id: session.household_id, item_key, ...patch },
-    { onConflict: "household_id,item_key" }
-  );
+  const { error } = await supabase
+    .from("shopping_item_meta")
+    .upsert(
+      { household_id: session.household_id, item_key, ...patch },
+      { onConflict: "household_id,item_key" }
+    );
   if (error) return { statusCode: 500, body: error.message };
   return { statusCode: 200, body: JSON.stringify({ ok: true }) };
 };
