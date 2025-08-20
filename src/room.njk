@@ -80,11 +80,10 @@ permalink: /room/
   const params = new URLSearchParams(location.search);
   const id = params.get('id');
   if (!id) { document.getElementById('roomName').textContent='Missing id'; return; }
-  // Load room basic info from list endpoint
-  const roomsRes = await fetch('/.netlify/functions/rooms-list');
+  // Load room basic info (single fetch for speed)
+  const roomsRes = await fetch(`/.netlify/functions/room-get?id=${encodeURIComponent(id)}`);
   if (!roomsRes.ok) { document.getElementById('roomName').textContent='Error'; return; }
-  const rooms = await roomsRes.json();
-  const room = rooms.find(r => r.id === id);
+  const room = await roomsRes.json();
   if (!room) { document.getElementById('roomName').textContent='Room not found'; return; }
   document.getElementById('roomName').textContent = room.name;
   document.getElementById('roomMeta').textContent = [room.floor, room.dimensions].filter(Boolean).join(' • ');
@@ -100,6 +99,12 @@ permalink: /room/
     hero.style.backgroundImage = `url(${src})`;
     hero.style.backgroundSize = 'cover';
     hero.style.backgroundPosition = 'center';
+    // also inject an <img> for more reliable paint behind overlay
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = room.name || 'Room photo';
+    img.className = 'absolute inset-0 w-full h-full object-cover';
+    hero.insertBefore(img, hero.firstChild);
   }
   const tbody = document.getElementById('mediaRows');
   const rows = [];
@@ -115,45 +120,7 @@ permalink: /room/
   }
   for (const d of documents) {
     const href = `/.netlify/functions/storage-proxy?bucket=docs&path=${encodeURIComponent(d.storage_path)}`;
-    rows.push(`<tr>
-      <td class=\"py-2\">📄</td>
-      <td class=\"py-2\">${d.title || 'Document'}</td>
-      <td class=\"py-2\">Document</td>
-  <td class=\"py-2\"><a class=\"btn-secondary px-2 py-1\" target=\"_blank\" href=\"${href}\">Open</a></td>
-  <td class=\"py-2\"></td>
-    </tr>`);
-  }
-  tbody.innerHTML = rows.join('') || '<tr><td class="py-3" colspan="4">No media yet.</td></tr>';
-  tbody.querySelectorAll('button[data-hero]').forEach(btn => btn.addEventListener('click', async () => {
-    const pid = btn.getAttribute('data-hero');
-    const res = await fetch('/.netlify/functions/room-photo-set-hero', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ photo_id: pid, room_id: id })});
-    if (res.ok) location.reload(); else alert('Failed to set hero');
-  }));
-
-  // Scan buttons
-  const scanPanel = document.getElementById('scanPanel');
-  const scanMsg = document.getElementById('scanMsg');
-  const scanItems = document.getElementById('scanItems');
-  tbody.querySelectorAll('button[data-scan]').forEach(btn => btn.addEventListener('click', async () => {
-    const pid = btn.getAttribute('data-scan');
-    scanPanel.classList.remove('hidden');
-    scanMsg.textContent = 'Scanning photo…';
-    scanItems.innerHTML = '';
-    const res = await fetch('/.netlify/functions/photo-scan-suggest', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ photo_id: pid, room_id: id })});
-    if (!res.ok) { scanMsg.textContent = 'Scan failed'; return; }
-    const { items } = await res.json();
-    if (!items?.length) { scanMsg.textContent = 'No items detected'; return; }
-    scanMsg.textContent = 'Review and add items:';
-    scanItems.innerHTML = items.map((it, idx) => {
-      const conf = typeof it.confidence === 'number' ? ` ${(Math.round(it.confidence*100))}%` : '';
-      const cat = it.category || '';
-      return `<div class=\"p-3 rounded-lg border border-gray-200 bg-white\">
-        <div class=\"font-medium\">${it.name}</div>
-        <div class=\"muted text-sm\">${cat}${conf ? ' •'+conf : ''}</div>
-        <div class=\"mt-2 flex gap-2\">
-          <select data-cat=\"${idx}\" class=\"rounded-lg border-gray-300 text-sm\">
-            <option value=\"\">Category</option>
-            <option>Painting</option>
+      // removed duplicate/broken scan block
             <option>Picture frame</option>
             <option>Furniture</option>
             <option>Electronics</option>
@@ -167,42 +134,6 @@ permalink: /room/
             <option>Rug/Carpet</option>
             <option>Fixed fitting</option>
             <option>Other</option>
-          </select>
-          <input data-price=\"${idx}\" type=\"number\" step=\"0.01\" placeholder=\"Price\" class=\"rounded-lg border-gray-300 text-sm\" />
-          <button class=\"btn px-2 py-1\" data-add=\"${idx}\">Add Asset</button>
-        </div>
-      </div>`;
-    }).join('');
-    scanItems.querySelectorAll('button[data-add]').forEach(btn2 => btn2.addEventListener('click', async () => {
-      const idx = btn2.getAttribute('data-add');
-      const it = items[Number(idx)];
-      const catSel = scanItems.querySelector(`select[data-cat=\\"${idx}\\"]`) as HTMLSelectElement;
-      const priceEl = scanItems.querySelector(`input[data-price=\\"${idx}\\"]`) as HTMLInputElement;
-      const body = {
-        room_id: id,
-        name: it.name,
-        category: (catSel && catSel.value) || it.category,
-        purchase_price: priceEl && priceEl.value ? Number(priceEl.value) : undefined,
-      };
-      const resp = await fetch('/.netlify/functions/assets-upsert', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
-      if (resp.ok) { btn2.textContent = 'Added'; btn2.setAttribute('disabled','true'); }
-      else { alert('Failed to add'); }
-    }));
-  }));
-
-  // Scan buttons
-  const scanPanel = document.getElementById('scanPanel');
-  const scanMsg = document.getElementById('scanMsg');
-  const scanItems = document.getElementById('scanItems');
-  async function doScan(pid, force){
-    scanPanel.classList.remove('hidden');
-    scanMsg.textContent = 'Scanning photo…';
-    scanItems.innerHTML = '';
-    const res = await fetch('/.netlify/functions/photo-scan-suggest', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ photo_id: pid, room_id: id, force: !!force })});
-    if (!res.ok) { scanMsg.textContent = 'Scan failed'; return; }
-    const { items } = await res.json();
-    if (!items?.length) { scanMsg.textContent = 'No items detected'; return; }
-    scanMsg.textContent = 'Review and add items:';
     scanItems.innerHTML = items.map((it, idx) => {
       const conf = typeof it.confidence === 'number' ? ` ${(Math.round(it.confidence*100))}%` : '';
       const cat = it.category || '';
@@ -211,8 +142,8 @@ permalink: /room/
     scanItems.querySelectorAll('button[data-add]').forEach(btn2 => btn2.addEventListener('click', async () => {
       const idx = btn2.getAttribute('data-add');
       const it = items[Number(idx)];
-      const catSel = scanItems.querySelector(`select[data-cat=\\\"${idx}\\\"]`) as HTMLSelectElement;
-      const priceEl = scanItems.querySelector(`input[data-price=\\\"${idx}\\\"]`) as HTMLInputElement;
+    const catSel = scanItems.querySelector(`select[data-cat="${idx}"]`);
+    const priceEl = scanItems.querySelector(`input[data-price="${idx}"]`);
       const body = {
         room_id: id,
         name: it.name,
@@ -232,18 +163,76 @@ permalink: /room/
   document.getElementById('rescanBtn')?.addEventListener('click', async () => {
     if (currentScanPid) await doScan(currentScanPid, true);
   });
+
+  // ToC: load existing lines
+  async function loadToc(){
+    try {
+      const ul = document.getElementById('tocList');
+      const res = await fetch(`/.netlify/functions/room-toc-list?room_id=${encodeURIComponent(id)}`);
+      if (!res.ok) { ul.innerHTML = '<li class="text-sm text-gray-500">Unable to load ToC</li>'; return; }
+      const data = await res.json();
+      const items = Array.isArray(data?.items) ? data.items : [];
+      if (!items.length) { ul.innerHTML = '<li class="text-sm text-gray-500">No entries yet</li>'; return; }
+      ul.innerHTML = items.map(it => `<li>${(it.line || '').replace(/</g,'&lt;')}</li>`).join('');
+    } catch { /* ignore */ }
+  }
+  await loadToc();
+
+  // Mic capture for ToC
+  const roomMicBtn = document.getElementById('roomMicBtn');
+  const roomMicStatus = document.getElementById('roomMicStatus');
+  function startMic(){
+    (async () => {
+      try {
+        if (!navigator.mediaDevices?.getUserMedia) { roomMicStatus.textContent = 'Mic not supported'; return; }
+        roomMicStatus.textContent = 'Recording… click again to stop';
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const chunks = [];
+        const rec = new MediaRecorder(stream);
+        rec.ondataavailable = (e) => chunks.push(e.data);
+        const stopped = new Promise(resolve => { rec.onstop = resolve; });
+        const stop = () => { roomMicBtn.removeEventListener('click', stop); rec.stop(); stream.getTracks().forEach(t=>t.stop()); };
+        roomMicBtn.addEventListener('click', stop);
+        rec.start();
+        await stopped;
+        roomMicStatus.textContent = 'Transcribing…';
+        const audio = new Blob(chunks, { type: 'audio/webm' });
+        const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type || 'audio/webm', 'x-filename': 'speech.webm' }, body: audio });
+        if (res.status === 401) { roomMicStatus.textContent = 'Please sign in'; return; }
+        if (!res.ok) { roomMicStatus.textContent = 'Transcribe failed'; return; }
+        const { text } = await res.json();
+        if (!text) { roomMicStatus.textContent = 'No text'; return; }
+        const addRes = await fetch('/.netlify/functions/room-toc-add', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ room_id: id, line: text })});
+        if (addRes.status === 401) { roomMicStatus.textContent = 'Please sign in'; return; }
+        if (!addRes.ok) { roomMicStatus.textContent = 'Save failed'; return; }
+        await loadToc();
+        roomMicStatus.textContent = 'Added';
+      } catch { roomMicStatus.textContent = 'Mic error'; }
+    })();
+  }
+  roomMicBtn?.addEventListener('click', startMic);
   // quick asset add
   const assetSave = document.getElementById('assetSave');
   const assetMsg = document.getElementById('assetMsg');
   assetSave.addEventListener('click', async () => {
-    const name = (document.getElementById('assetName') as HTMLInputElement).value.trim();
-    const category = (document.getElementById('assetCategory') as HTMLSelectElement).value || undefined;
-    const priceStr = (document.getElementById('assetPrice') as HTMLInputElement).value;
+    const nameEl = document.getElementById('assetName');
+    const catEl = document.getElementById('assetCategory');
+    const priceEl = document.getElementById('assetPrice');
+    const name = nameEl && 'value' in nameEl ? nameEl.value.trim() : '';
+    const category = catEl && 'value' in catEl ? (catEl.value || undefined) : undefined;
+    const priceStr = priceEl && 'value' in priceEl ? priceEl.value : '';
     const purchase_price = priceStr ? Number(priceStr) : undefined;
     if (!name) { assetMsg.textContent = 'Name required'; return; }
-    const res = await fetch('/.netlify/functions/assets-upsert', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ room_id: id, name, category, purchase_price }) });
-    if (res.ok) { assetMsg.textContent = 'Added'; (document.getElementById('assetName') as HTMLInputElement).value=''; (document.getElementById('assetPrice') as HTMLInputElement).value=''; }
-    else assetMsg.textContent = 'Error adding item';
+    try {
+      const res = await fetch('/.netlify/functions/assets-upsert', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ room_id: id, name, category, purchase_price }) });
+      if (res.status === 401) { assetMsg.textContent = 'Please sign in'; return; }
+      if (res.ok) {
+        assetMsg.textContent = 'Added';
+        if (nameEl && 'value' in nameEl) nameEl.value = '';
+        if (priceEl && 'value' in priceEl) priceEl.value = '';
+      }
+      else assetMsg.textContent = (await res.text()) || 'Error adding item';
+    } catch { assetMsg.textContent = 'Network error adding item'; }
   });
 })();
 </script>
