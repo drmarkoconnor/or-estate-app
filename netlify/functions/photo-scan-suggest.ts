@@ -8,6 +8,17 @@ type Suggestion = {
   confidence?: number; // 0..1
 };
 
+// basic in-memory rate limiter (per instance)
+const rl = new Map<string, number[]>();
+const allowRate = (key: string, limit: number, perMs: number) => {
+  const now = Date.now();
+  const arr = (rl.get(key) || []).filter((t) => now - t < perMs);
+  if (arr.length >= limit) return false;
+  arr.push(now);
+  rl.set(key, arr);
+  return true;
+};
+
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
   const session = await requireAuth(event);
@@ -15,12 +26,18 @@ export const handler: Handler = async (event) => {
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return { statusCode: 500, body: "Missing OPENAI_API_KEY" };
+  const model = process.env.OPENAI_VISION_MODEL || "gpt-4o-mini";
+  const timeoutMs = Number(process.env.OPENAI_TIMEOUT_MS || 20000);
 
   try {
     const body = event.body ? JSON.parse(event.body) : {};
     const photo_id = body.photo_id as string | undefined;
     const room_id = body.room_id as string | undefined;
     if (!photo_id || !room_id) return { statusCode: 400, body: "photo_id and room_id required" };
+
+    // rate limit: 5 scans/min per household
+    const rlKey = `${session.household_id}:scan`;
+    if (!allowRate(rlKey, 5, 60_000)) return { statusCode: 429, body: "Too Many Requests" };
 
     // Load the photo record and ensure it belongs to the user's household and room
     const { data: photo, error } = await supabase
@@ -33,10 +50,22 @@ export const handler: Handler = async (event) => {
     if (photo.household_id !== session.household_id || photo.room_id !== room_id)
       return { statusCode: 403, body: "Forbidden" };
 
-    // Create a short-lived signed URL to the image in Supabase Storage (photos bucket)
+  // Create a short-lived signed URL to the image in Supabase Storage (photos bucket)
     const signed = await supabase.storage.from("photos").createSignedUrl(photo.storage_path, 60 * 5);
     if (signed.error) return { statusCode: 500, body: signed.error.message };
     const imageUrl = signed.data.signedUrl;
+  // Optional heuristic: reject very large originals based on naming; client should upload reasonable sizes
+
+    // Cache lookup: by photo_id + storage_path
+    const cacheRes = await supabase
+      .from("room_photo_scan_cache")
+      .select("items")
+      .eq("photo_id", photo_id)
+      .eq("storage_path", photo.storage_path)
+      .maybeSingle();
+    if (cacheRes.data && !body?.force) {
+      return { statusCode: 200, body: JSON.stringify(cacheRes.data), headers: { "x-cache": "hit", "x-openai-latency-ms": "0" } };
+    }
 
     // Ask a vision model to extract items. Use JSON response format for structured output
     const system =
@@ -47,29 +76,49 @@ export const handler: Handler = async (event) => {
     const userText =
       "Extract a concise list of household items visible in this photo. Respond ONLY with JSON in this shape: {\n  \"items\": [\n    { \"name\": string, \"category\": string, \"confidence\": number }\n  ]\n}\n";
 
-    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: system },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: userText },
-              { type: "image_url", image_url: { url: imageUrl } },
-            ],
+    // Timeout + retries
+    const started = Date.now();
+    const doFetch = async (attempt: number): Promise<Response> => {
+      const ac = new AbortController();
+      const to = setTimeout(() => ac.abort(), timeoutMs);
+      try {
+        const r = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
           },
-        ],
-        max_tokens: 700,
-        temperature: 0.2,
-      }),
-    });
+          body: JSON.stringify({
+            model,
+            response_format: { type: "json_object" },
+            messages: [
+              { role: "system", content: system },
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: userText },
+                  { type: "image_url", image_url: { url: imageUrl } },
+                ],
+              },
+            ],
+            max_tokens: 300,
+            temperature: 0.2,
+          }),
+          signal: ac.signal,
+        });
+        if (r.status === 429 || r.status >= 500) {
+          if (attempt < 2) {
+            const backoff = 500 * Math.pow(2, attempt);
+            await new Promise((res) => setTimeout(res, backoff));
+            return doFetch(attempt + 1);
+          }
+        }
+        return r;
+      } finally {
+        clearTimeout(to);
+      }
+    };
+    const resp = await doFetch(0);
     if (!resp.ok) {
       const t = await resp.text();
       return { statusCode: 502, body: `Vision API error: ${t}` };
@@ -96,7 +145,14 @@ export const handler: Handler = async (event) => {
       }))
       .slice(0, 20);
 
-    return { statusCode: 200, body: JSON.stringify({ items: clean }) };
+    // upsert cache
+    await supabase
+      .from("room_photo_scan_cache")
+      .upsert({ photo_id, storage_path: photo.storage_path, items: clean }, { onConflict: "photo_id,storage_path" });
+
+    const latency = Date.now() - started;
+    console.log("photo-scan", { household: session.household_id, photo_id, model, latency_ms: latency, items: clean.length });
+  return { statusCode: 200, body: JSON.stringify({ items: clean }), headers: { "x-openai-latency-ms": String(latency), "x-cache": "miss" } };
   } catch (e: any) {
     return { statusCode: 500, body: e?.message || "Scan failed" };
   }
