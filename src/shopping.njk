@@ -182,17 +182,17 @@ permalink: /shopping/
     try {
       micStatus.textContent = 'Recording… click again to stop';
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const chunks = [] as Blob[];
+      const chunks = [];
       const rec = new MediaRecorder(stream);
       rec.ondataavailable = (e) => chunks.push(e.data);
-      const done = new Promise<Blob>(resolve => { rec.onstop = () => resolve(new Blob(chunks, { type: 'audio/webm' })); });
+      const done = new Promise(resolve => { rec.onstop = () => resolve(new Blob(chunks, { type: 'audio/webm' })); });
       rec.start();
       await new Promise(r => micBtn.onclick = () => { rec.stop(); stream.getTracks().forEach(t=>t.stop()); r(null); });
       micStatus.textContent = 'Transcribing…';
       const audio = await done;
-      const buf = new Uint8Array(await audio.arrayBuffer());
-      const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type, 'x-filename': 'speech.webm' }, body: buf });
-      if (!res.ok) throw new Error(await res.text());
+      const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type || 'audio/webm', 'x-filename': 'speech.webm' }, body: audio });
+      if (res.status === 401) { micStatus.textContent = 'Please sign in'; return; }
+      if (!res.ok) { micStatus.textContent = 'Transcribe failed'; return; }
       const { text } = await res.json();
       micStatus.textContent = 'Parsed';
       // naive split by comma or newline
