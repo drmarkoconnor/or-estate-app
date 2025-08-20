@@ -152,13 +152,28 @@ export const handler: Handler = async (event) => {
       }))
       .slice(0, 20);
 
-    // upsert cache
-    await supabase
-      .from("room_photo_scan_cache")
-      .upsert(
-        { photo_id, storage_path: photo.storage_path, items: clean },
-        { onConflict: "photo_id,storage_path" }
-      );
+    // upsert cache (best-effort). If the cache table doesn't exist yet (migration not run), ignore and continue
+    try {
+      const up = await supabase
+        .from("room_photo_scan_cache")
+        .upsert(
+          { photo_id, storage_path: photo.storage_path, items: clean },
+          { onConflict: "photo_id,storage_path" }
+        );
+      if ((up as any)?.error) {
+        const msg = (up as any).error?.message || "";
+        // relation "room_photo_scan_cache" does not exist
+        if (!/does not exist/i.test(msg)) {
+          console.warn("cache upsert error", msg);
+        }
+      }
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      if (!/does not exist/i.test(msg)) {
+        console.warn("cache upsert threw", msg);
+      }
+      // swallow if table missing
+    }
 
     const latency = Date.now() - started;
     console.log("photo-scan", {

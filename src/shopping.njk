@@ -230,16 +230,20 @@ permalink: /shopping/
   const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type || mimeType || 'audio/webm', 'x-filename': filename, 'x-base64': '0' }, body: audio });
         if (res.status === 401) { micStatus.textContent = 'Please sign in'; return; }
   if (!res.ok) { micStatus.textContent = 'Transcribe failed: ' + (await res.text()).slice(0,180); return; }
-        const { text } = await res.json();
-        micStatus.textContent = 'Parsed';
-        const parts = text.split(/[\n,]/).map(s => s.trim()).filter(Boolean);
+  const { text } = await res.json();
+  micStatus.textContent = 'Cleaning…';
+  // send to NLP extract for better parsing and filtering
+  const clean = await fetch('/.netlify/functions/nlp-extract', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind: 'shopping', text }) });
+  if (!clean.ok) { micStatus.textContent = 'Parse failed: ' + (await clean.text()).slice(0,180); return; }
+  const { items: cleanedItems = [] } = await clean.json();
+  const parts = cleanedItems.length ? cleanedItems : text.split(/[\n,]/).map(s => s.trim()).filter(Boolean);
         const flat = flattenCatalog();
         for (const p of parts){
           const match = flat.find(it => it.name.toLowerCase() === p.toLowerCase() || it.name.toLowerCase().includes(p.toLowerCase()));
           if (match && !chosen.find(c => c.id === match.id)) chosen.push({ id: match.id, name: match.name, source: match.source });
         }
         renderCatalog(); renderMarkdown();
-        micStatus.textContent = parts.length ? `Added ${parts.length} items` : 'No matches';
+  micStatus.textContent = parts.length ? `Added ${parts.length} items` : 'No matches';
       } else {
         // stop
   if (activeRecorder) activeRecorder.stop();

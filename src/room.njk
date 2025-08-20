@@ -251,19 +251,26 @@ permalink: /room/
         const chunks = [];
         const rec = new MediaRecorder(stream);
         rec.ondataavailable = (e) => chunks.push(e.data);
-        const stopped = new Promise(resolve => { rec.onstop = resolve; });
-        const stop = () => { roomMicBtn.removeEventListener('click', stop); rec.stop(); stream.getTracks().forEach(t => t.stop()); };
+  const stopped = new Promise(resolve => { rec.onstop = resolve; });
+  let auto;
+  const stop = () => { roomMicBtn.removeEventListener('click', stop); try{ rec.stop(); }catch{} try{ stream.getTracks().forEach(t => t.stop()); }catch{} if (auto) clearTimeout(auto); };
         roomMicBtn.addEventListener('click', stop);
         rec.start();
+  auto = setTimeout(stop, 30000);
         await stopped;
         roomMicStatus.textContent = 'Transcribing…';
         const audio = new Blob(chunks, { type: 'audio/webm' });
         const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type || 'audio/webm', 'x-filename': 'speech.webm', 'x-base64': '0' }, body: audio });
         if (res.status === 401) { roomMicStatus.textContent = 'Please sign in'; return; }
   if (!res.ok) { roomMicStatus.textContent = 'Transcribe failed: ' + (await res.text()).slice(0,180); return; }
-        const { text } = await res.json();
-        if (!text) { roomMicStatus.textContent = 'No text'; return; }
-        const addRes = await fetch('/.netlify/functions/room-toc-add', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ room_id: id, line: text }) });
+  const { text } = await res.json();
+  if (!text) { roomMicStatus.textContent = 'No text'; return; }
+  // clean to a single ToC line via NLP
+  const clean = await fetch('/.netlify/functions/nlp-extract', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind: 'toc', text }) });
+  if (!clean.ok) { roomMicStatus.textContent = 'Parse failed: ' + (await clean.text()).slice(0,160); return; }
+  const { items: cleaned = [] } = await clean.json();
+  const line = cleaned[0] || text;
+  const addRes = await fetch('/.netlify/functions/room-toc-add', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ room_id: id, line }) });
         if (addRes.status === 401) { roomMicStatus.textContent = 'Please sign in'; return; }
         if (!addRes.ok) { roomMicStatus.textContent = 'Save failed'; return; }
         await loadToc();
