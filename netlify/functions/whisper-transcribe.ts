@@ -21,14 +21,14 @@ export const handler: Handler = async (event) => {
   if (!allowRate(`stt:${ip}`, 10, 60_000)) return { statusCode: 429, body: "Too Many Requests" };
 
   // Expect raw audio bytes; content-type like audio/webm or audio/ogg; filename via header for OpenAI
-  const ct = event.headers["content-type"] || "application/octet-stream";
+  const ct = (event.headers["content-type"] as string) || "application/octet-stream";
   const fileName =
     (event.headers["x-filename"] as string) ||
     `audio.${ct.includes("ogg") ? "ogg" : ct.includes("mp3") ? "mp3" : "webm"}`;
-  const bytes =
-    event.isBase64Encoded && event.body
-      ? Buffer.from(event.body, "base64")
-      : Buffer.from(event.body || "", "utf8");
+  const clientSaysBase64 = (event.headers["x-base64"] as string) === "1";
+  const isB64 = !!event.isBase64Encoded || clientSaysBase64;
+  const bodyStr = event.body || "";
+  const bytes = isB64 ? Buffer.from(bodyStr, "base64") : Buffer.from(bodyStr, "binary");
   if (!bytes.length) return { statusCode: 400, body: "No audio" };
   // size guard (~10MB)
   const maxBytes = Number(process.env.STT_MAX_BYTES || 10_000_000);

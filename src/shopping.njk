@@ -204,6 +204,8 @@ permalink: /shopping/
     try {
       if (!recording){
         micStatus.textContent = 'Recording… click again to stop';
+        micBtn.classList.add('!bg-orange-500','!text-black');
+        micBtn.textContent = 'Click to stop recording';
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         activeStream = stream;
         const chunks = [];
@@ -220,11 +222,12 @@ permalink: /shopping/
         const audio = await done;
         // cleanup
         clearTimeout(stopTimer); stopTimer = null;
-        activeStream.getTracks().forEach(t=>t.stop());
-        activeStream = null; activeRecorder = null; recording = false; micBtn.classList.remove('opacity-70');
+  activeStream.getTracks().forEach(t=>t.stop());
+  activeStream = null; activeRecorder = null; recording = false; micBtn.classList.remove('opacity-70','!bg-orange-500','!text-black');
+  micBtn.textContent = '🎙️ Speak items';
         micStatus.textContent = 'Transcribing…';
         const filename = (mimeType && mimeType.includes('mp4')) ? 'speech.m4a' : (mimeType && mimeType.includes('ogg') ? 'speech.ogg' : 'speech.webm');
-        const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type || mimeType || 'audio/webm', 'x-filename': filename }, body: audio });
+  const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type || mimeType || 'audio/webm', 'x-filename': filename, 'x-base64': '0' }, body: audio });
         if (res.status === 401) { micStatus.textContent = 'Please sign in'; return; }
         if (!res.ok) { micStatus.textContent = 'Transcribe failed'; return; }
         const { text } = await res.json();
@@ -239,7 +242,9 @@ permalink: /shopping/
         micStatus.textContent = parts.length ? `Added ${parts.length} items` : 'No matches';
       } else {
         // stop
-        if (activeRecorder) activeRecorder.stop();
+  if (activeRecorder) activeRecorder.stop();
+  micBtn.classList.remove('!bg-orange-500','!text-black');
+  micBtn.textContent = '🎙️ Speak items';
       }
     } catch(e){
       console.error(e);
