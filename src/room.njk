@@ -20,11 +20,27 @@ permalink: /room/
             <th class="py-2">Title/Caption</th>
             <th class="py-2">Type</th>
             <th class="py-2">Open</th>
+            <th class="py-2">Scan</th>
           </tr>
         </thead>
         <tbody id="mediaRows"></tbody>
       </table>
+      <div id="scanPanel" class="mt-4 hidden">
+        <h4 class="font-semibold">Scan suggestions</h4>
+        <p id="scanMsg" class="muted text-sm mb-2"></p>
+        <div id="scanItems" class="grid gap-2 sm:grid-cols-2"></div>
+      </div>
     </div>
+  </div>
+</section>
+<section class="card mt-4">
+  <div class="p-4">
+    <h3 class="text-lg font-semibold">Table of Contents</h3>
+    <div class="mt-2 flex items-center gap-2">
+      <button class="btn-secondary" id="roomMicBtn">🎙️ Speak ToC line</button>
+      <span id="roomMicStatus" class="muted text-sm"></span>
+    </div>
+    <ul id="tocList" class="mt-3 list-disc pl-5 text-sm"></ul>
   </div>
 </section>
 <section class="card mt-4">
@@ -91,6 +107,7 @@ permalink: /room/
       <td class=\"py-2\">${p.caption || ''} ${p.is_hero ? '<span class=\\'ml-2 text-xs text-emerald-700\\'>(Hero)</span>' : ''}</td>
       <td class=\"py-2\">Photo</td>
       <td class=\"py-2\"><div class=\"flex items-center gap-2\"><a class=\"btn-secondary px-2 py-1\" target=\"_blank\" href=\"${thumb}\">Open</a><button class=\"btn-secondary px-2 py-1\" data-hero=\"${p.id}\">Set Hero</button></div></td>
+      <td class=\"py-2\"><button class=\"btn-secondary px-2 py-1\" data-scan=\"${p.id}\">Scan</button></td>
     </tr>`);
   }
   for (const d of documents) {
@@ -99,7 +116,8 @@ permalink: /room/
       <td class=\"py-2\">📄</td>
       <td class=\"py-2\">${d.title || 'Document'}</td>
       <td class=\"py-2\">Document</td>
-      <td class=\"py-2\"><a class=\"btn-secondary px-2 py-1\" target=\"_blank\" href=\"${href}\">Open</a></td>
+  <td class=\"py-2\"><a class=\"btn-secondary px-2 py-1\" target=\"_blank\" href=\"${href}\">Open</a></td>
+  <td class=\"py-2\"></td>
     </tr>`);
   }
   tbody.innerHTML = rows.join('') || '<tr><td class="py-3" colspan="4">No media yet.</td></tr>';
@@ -108,6 +126,101 @@ permalink: /room/
     const res = await fetch('/.netlify/functions/room-photo-set-hero', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ photo_id: pid, room_id: id })});
     if (res.ok) location.reload(); else alert('Failed to set hero');
   }));
+
+  // Scan buttons
+  const scanPanel = document.getElementById('scanPanel');
+  const scanMsg = document.getElementById('scanMsg');
+  const scanItems = document.getElementById('scanItems');
+  tbody.querySelectorAll('button[data-scan]').forEach(btn => btn.addEventListener('click', async () => {
+    const pid = btn.getAttribute('data-scan');
+    scanPanel.classList.remove('hidden');
+    scanMsg.textContent = 'Scanning photo…';
+    scanItems.innerHTML = '';
+    const res = await fetch('/.netlify/functions/photo-scan-suggest', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ photo_id: pid, room_id: id })});
+    if (!res.ok) { scanMsg.textContent = 'Scan failed'; return; }
+    const { items } = await res.json();
+    if (!items?.length) { scanMsg.textContent = 'No items detected'; return; }
+    scanMsg.textContent = 'Review and add items:';
+    scanItems.innerHTML = items.map((it, idx) => {
+      const conf = typeof it.confidence === 'number' ? ` ${(Math.round(it.confidence*100))}%` : '';
+      const cat = it.category || '';
+      return `<div class=\"p-3 rounded-lg border border-gray-200 bg-white\">
+        <div class=\"font-medium\">${it.name}</div>
+        <div class=\"muted text-sm\">${cat}${conf ? ' •'+conf : ''}</div>
+        <div class=\"mt-2 flex gap-2\">
+          <select data-cat=\"${idx}\" class=\"rounded-lg border-gray-300 text-sm\">
+            <option value=\"\">Category</option>
+            <option>Painting</option>
+            <option>Picture frame</option>
+            <option>Furniture</option>
+            <option>Electronics</option>
+            <option>Appliance</option>
+            <option>Lighting</option>
+            <option>Textiles</option>
+            <option>Decorative</option>
+            <option>Tableware</option>
+            <option>Tools</option>
+            <option>Book/Media</option>
+            <option>Rug/Carpet</option>
+            <option>Fixed fitting</option>
+            <option>Other</option>
+          </select>
+          <input data-price=\"${idx}\" type=\"number\" step=\"0.01\" placeholder=\"Price\" class=\"rounded-lg border-gray-300 text-sm\" />
+          <button class=\"btn px-2 py-1\" data-add=\"${idx}\">Add Asset</button>
+        </div>
+      </div>`;
+    }).join('');
+    scanItems.querySelectorAll('button[data-add]').forEach(btn2 => btn2.addEventListener('click', async () => {
+      const idx = btn2.getAttribute('data-add');
+      const it = items[Number(idx)];
+      const catSel = scanItems.querySelector(`select[data-cat=\\"${idx}\\"]`) as HTMLSelectElement;
+      const priceEl = scanItems.querySelector(`input[data-price=\\"${idx}\\"]`) as HTMLInputElement;
+      const body = {
+        room_id: id,
+        name: it.name,
+        category: (catSel && catSel.value) || it.category,
+        purchase_price: priceEl && priceEl.value ? Number(priceEl.value) : undefined,
+      };
+      const resp = await fetch('/.netlify/functions/assets-upsert', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
+      if (resp.ok) { btn2.textContent = 'Added'; btn2.setAttribute('disabled','true'); }
+      else { alert('Failed to add'); }
+    }));
+  }));
+
+  // ToC
+  async function loadToc(){
+    const r = await fetch(`/.netlify/functions/room-toc-list?room_id=${id}`);
+    const list = r.ok ? await r.json() : [];
+    document.getElementById('tocList').innerHTML = list.map(x => `<li>${x.line}</li>`).join('') || '<li class="muted">No entries yet.</li>';
+  }
+  await loadToc();
+
+  const roomMicBtn = document.getElementById('roomMicBtn');
+  const roomMicStatus = document.getElementById('roomMicStatus');
+  async function recordToRoom(){
+    try {
+      roomMicStatus.textContent = 'Recording… click again to stop';
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const chunks = [] as Blob[];
+      const rec = new MediaRecorder(stream);
+      rec.ondataavailable = (e) => chunks.push(e.data);
+      const done = new Promise<Blob>(resolve => { rec.onstop = () => resolve(new Blob(chunks, { type: 'audio/webm' })); });
+      rec.start();
+      await new Promise(r => roomMicBtn.onclick = () => { rec.stop(); stream.getTracks().forEach(t=>t.stop()); r(null); });
+      roomMicStatus.textContent = 'Transcribing…';
+      const audio = await done;
+      const buf = new Uint8Array(await audio.arrayBuffer());
+      const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type, 'x-filename': 'speech.webm' }, body: buf });
+      if (!res.ok) throw new Error(await res.text());
+      const { text } = await res.json();
+      if (text) {
+        await fetch('/.netlify/functions/room-toc-add', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ room_id: id, line: text })});
+        await loadToc();
+        roomMicStatus.textContent = 'Added';
+      } else roomMicStatus.textContent = 'No text';
+    } catch(e){ roomMicStatus.textContent = 'Mic error'; }
+  }
+  roomMicBtn.addEventListener('click', recordToRoom, { once: true });
 
   // quick asset add
   const assetSave = document.getElementById('assetSave');

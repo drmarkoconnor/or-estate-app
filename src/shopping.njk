@@ -32,6 +32,10 @@ permalink: /shopping/
         <h3 class="text-lg font-semibold">Markdown Preview</h3>
         <pre id="md" class="mt-3 whitespace-pre-wrap text-sm"></pre>
       </div>
+      <div class="mt-2 flex items-center gap-2">
+        <button class="btn-secondary" id="micBtn">🎙️ Speak items</button>
+        <span id="micStatus" class="muted text-sm"></span>
+      </div>
       <div class="mt-2 flex items-center gap-2 flex-wrap">
         <button class="btn" id="copyBtn">Copy Markdown</button>
   <a class="btn-secondary" id="viewLatest" href="#">View Saved List</a>
@@ -171,6 +175,38 @@ permalink: /shopping/
   });
 
   searchEl.addEventListener('input', renderCatalog);
+  // voice capture for shopping list
+  const micBtn = document.getElementById('micBtn');
+  const micStatus = document.getElementById('micStatus');
+  async function recordAndTranscribe(){
+    try {
+      micStatus.textContent = 'Recording… click again to stop';
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const chunks = [] as Blob[];
+      const rec = new MediaRecorder(stream);
+      rec.ondataavailable = (e) => chunks.push(e.data);
+      const done = new Promise<Blob>(resolve => { rec.onstop = () => resolve(new Blob(chunks, { type: 'audio/webm' })); });
+      rec.start();
+      await new Promise(r => micBtn.onclick = () => { rec.stop(); stream.getTracks().forEach(t=>t.stop()); r(null); });
+      micStatus.textContent = 'Transcribing…';
+      const audio = await done;
+      const buf = new Uint8Array(await audio.arrayBuffer());
+      const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type, 'x-filename': 'speech.webm' }, body: buf });
+      if (!res.ok) throw new Error(await res.text());
+      const { text } = await res.json();
+      micStatus.textContent = 'Parsed';
+      // naive split by comma or newline
+      const parts = text.split(/[\n,]/).map(s => s.trim()).filter(Boolean);
+      const flat = flattenCatalog();
+      for (const p of parts){
+        const match = flat.find(it => it.name.toLowerCase() === p.toLowerCase() || it.name.toLowerCase().includes(p.toLowerCase()));
+        if (match && !chosen.find(c => c.id === match.id)) chosen.push({ id: match.id, name: match.name, source: match.source });
+      }
+      renderCatalog(); renderMarkdown();
+      micStatus.textContent = parts.length ? `Added ${parts.length} items` : 'No matches';
+    } catch(e){ micStatus.textContent = 'Mic error'; }
+  }
+  micBtn.addEventListener('click', recordAndTranscribe, { once: true });
   favFilterEl.addEventListener('change', renderCatalog);
   sortByEl.addEventListener('change', renderCatalog);
   addAllBtn.addEventListener('click', () => {
