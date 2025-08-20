@@ -26,7 +26,10 @@ permalink: /room/
         <tbody id="mediaRows"></tbody>
       </table>
       <div id="scanPanel" class="mt-4 hidden">
-        <h4 class="font-semibold">Scan suggestions</h4>
+        <div class="flex items-center justify-between">
+          <h4 class="font-semibold">Scan suggestions</h4>
+          <button id="rescanBtn" class="btn-secondary px-2 py-1">Rescan</button>
+        </div>
         <p id="scanMsg" class="muted text-sm mb-2"></p>
         <div id="scanItems" class="grid gap-2 sm:grid-cols-2"></div>
       </div>
@@ -187,41 +190,48 @@ permalink: /room/
     }));
   }));
 
-  // ToC
-  async function loadToc(){
-    const r = await fetch(`/.netlify/functions/room-toc-list?room_id=${id}`);
-    const list = r.ok ? await r.json() : [];
-    document.getElementById('tocList').innerHTML = list.map(x => `<li>${x.line}</li>`).join('') || '<li class="muted">No entries yet.</li>';
+  // Scan buttons
+  const scanPanel = document.getElementById('scanPanel');
+  const scanMsg = document.getElementById('scanMsg');
+  const scanItems = document.getElementById('scanItems');
+  async function doScan(pid, force){
+    scanPanel.classList.remove('hidden');
+    scanMsg.textContent = 'Scanning photo…';
+    scanItems.innerHTML = '';
+    const res = await fetch('/.netlify/functions/photo-scan-suggest', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ photo_id: pid, room_id: id, force: !!force })});
+    if (!res.ok) { scanMsg.textContent = 'Scan failed'; return; }
+    const { items } = await res.json();
+    if (!items?.length) { scanMsg.textContent = 'No items detected'; return; }
+    scanMsg.textContent = 'Review and add items:';
+    scanItems.innerHTML = items.map((it, idx) => {
+      const conf = typeof it.confidence === 'number' ? ` ${(Math.round(it.confidence*100))}%` : '';
+      const cat = it.category || '';
+      return `<div class=\"p-3 rounded-lg border border-gray-200 bg-white\">\n        <div class=\"font-medium\">${it.name}</div>\n        <div class=\"muted text-sm\">${cat}${conf ? ' •'+conf : ''}</div>\n        <div class=\"mt-2 flex gap-2\">\n          <select data-cat=\"${idx}\" class=\"rounded-lg border-gray-300 text-sm\">\n            <option value=\"\">Category</option>\n            <option>Painting</option>\n            <option>Picture frame</option>\n            <option>Furniture</option>\n            <option>Electronics</option>\n            <option>Appliance</option>\n            <option>Lighting</option>\n            <option>Textiles</option>\n            <option>Decorative</option>\n            <option>Tableware</option>\n            <option>Tools</option>\n            <option>Book/Media</option>\n            <option>Rug/Carpet</option>\n            <option>Fixed fitting</option>\n            <option>Other</option>\n          </select>\n          <input data-price=\"${idx}\" type=\"number\" step=\"0.01\" placeholder=\"Price\" class=\"rounded-lg border-gray-300 text-sm\" />\n          <button class=\"btn px-2 py-1\" data-add=\"${idx}\">Add Asset</button>\n        </div>\n      </div>`;
+    }).join('');
+    scanItems.querySelectorAll('button[data-add]').forEach(btn2 => btn2.addEventListener('click', async () => {
+      const idx = btn2.getAttribute('data-add');
+      const it = items[Number(idx)];
+      const catSel = scanItems.querySelector(`select[data-cat=\\\"${idx}\\\"]`) as HTMLSelectElement;
+      const priceEl = scanItems.querySelector(`input[data-price=\\\"${idx}\\\"]`) as HTMLInputElement;
+      const body = {
+        room_id: id,
+        name: it.name,
+        category: (catSel && catSel.value) || it.category,
+        purchase_price: priceEl && priceEl.value ? Number(priceEl.value) : undefined,
+      };
+      const resp = await fetch('/.netlify/functions/assets-upsert', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
+      if (resp.ok) { btn2.textContent = 'Added'; btn2.setAttribute('disabled','true'); }
+      else { alert('Failed to add'); }
+    }));
   }
-  await loadToc();
-
-  const roomMicBtn = document.getElementById('roomMicBtn');
-  const roomMicStatus = document.getElementById('roomMicStatus');
-  async function recordToRoom(){
-    try {
-      roomMicStatus.textContent = 'Recording… click again to stop';
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const chunks = [] as Blob[];
-      const rec = new MediaRecorder(stream);
-      rec.ondataavailable = (e) => chunks.push(e.data);
-      const done = new Promise<Blob>(resolve => { rec.onstop = () => resolve(new Blob(chunks, { type: 'audio/webm' })); });
-      rec.start();
-      await new Promise(r => roomMicBtn.onclick = () => { rec.stop(); stream.getTracks().forEach(t=>t.stop()); r(null); });
-      roomMicStatus.textContent = 'Transcribing…';
-      const audio = await done;
-      const buf = new Uint8Array(await audio.arrayBuffer());
-      const res = await fetch('/.netlify/functions/whisper-transcribe', { method: 'POST', headers: { 'content-type': audio.type, 'x-filename': 'speech.webm' }, body: buf });
-      if (!res.ok) throw new Error(await res.text());
-      const { text } = await res.json();
-      if (text) {
-        await fetch('/.netlify/functions/room-toc-add', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ room_id: id, line: text })});
-        await loadToc();
-        roomMicStatus.textContent = 'Added';
-      } else roomMicStatus.textContent = 'No text';
-    } catch(e){ roomMicStatus.textContent = 'Mic error'; }
-  }
-  roomMicBtn.addEventListener('click', recordToRoom, { once: true });
-
+  let currentScanPid = null;
+  tbody.querySelectorAll('button[data-scan]').forEach(btn => btn.addEventListener('click', async () => {
+    currentScanPid = btn.getAttribute('data-scan');
+    await doScan(currentScanPid, false);
+  }));
+  document.getElementById('rescanBtn')?.addEventListener('click', async () => {
+    if (currentScanPid) await doScan(currentScanPid, true);
+  });
   // quick asset add
   const assetSave = document.getElementById('assetSave');
   const assetMsg = document.getElementById('assetMsg');
